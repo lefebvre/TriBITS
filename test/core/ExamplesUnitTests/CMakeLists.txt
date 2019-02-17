@@ -113,6 +113,81 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsHelloWorld
   )
 
 
+TRIBITS_ADD_ADVANCED_TEST( TribitsHelloWorld_EXE_DISABLE
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+  TEST_0 CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsHelloWorld_COMMON_CONFIG_ARGS}
+      -DTribitsHelloWorld_ENABLE_TESTS=ON
+      -DHelloWorld_unit_tests_EXE_DISABLE=ON
+      ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsHelloWorld
+    PASS_REGULAR_EXPRESSION_ALL
+      "-- HelloWorld_unit_tests EXE NOT being built due to HelloWorld_unit_tests_EXE_DISABLE=[']ON[']"
+      "Configuring done"
+      "Generating done"
+      "Build files have been written to: .*ExamplesUnitTests/TriBITS_TribitsHelloWorld"
+  TEST_1 CMND make
+    ARGS ${CTEST_BUILD_FLAGS}
+    PASS_REGULAR_EXPRESSION_ALL
+      "Built target hello_world_lib"
+      "Built target hello_world"
+  TEST_2 CMND ${CMAKE_CTEST_COMMAND} ARGS -VV
+    PASS_REGULAR_EXPRESSION_ALL
+      "Test [#]2: HelloWorld_unit_tests [.]+[*][*][*]Not Run"
+      ": HelloWorld_hello_world .*  Passed"
+      "2 - HelloWorld_unit_tests [(]Not Run[)]"
+      "50% tests passed, 1 tests failed out of 2"
+  )
+  # NOTE: Above we are testing the <exec_name>_EXE_DISABLE option in a full
+  # configure and build case because the TRIBITS_ADD_EXECUTABLE() command is
+  # not set up for unit-testing mode.
+
+
+TRIBITS_ADD_ADVANCED_TEST( TribitsHelloWorld_InSourceBuildErrors
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+
+  TEST_0
+    CMND ${CMAKE_COMMAND}
+    ARGS -E copy_directory
+      ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsHelloWorld
+      TribitsHelloWorld
+
+  TEST_1
+    MESSAGE "Try an in-source configure and check errror message"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsHelloWorld_COMMON_CONFIG_ARGS}
+      -DTribitsHelloWorld_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      .
+    WORKING_DIRECTORY TribitsHelloWorld
+    SKIP_CLEAN_WORKING_DIRECTORY
+    PASS_REGULAR_EXPRESSION_ALL
+      "CMAKE_CURRENT_SOURCE_DIR=.*/TriBITS_TribitsHelloWorld_InSourceBuildErrors/TribitsHelloWorld"
+      "CMAKE_CURRENT_BINARY_DIR=.*/TriBITS_TribitsHelloWorld_InSourceBuildErrors/TribitsHelloWorld"
+      "TribitsHelloWorld does not support in source builds"
+      "NOTE: You must now delete the CMakeCache.txt file and the CMakeFiles/"
+      "Please create a different directory and configure"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_2
+    MESSAGE "Try configure in build subdir and check for bad CMakeCache.txt file"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsHelloWorld_COMMON_CONFIG_ARGS}
+      -DTribitsHelloWorld_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      ..
+    WORKING_DIRECTORY TribitsHelloWorld/BUILD
+    PASS_REGULAR_EXPRESSION_ALL
+      "TriBITS_TribitsHelloWorld_InSourceBuildErrors/TribitsHelloWorld/CMakeCache.txt"
+      "exists from a likely prior attempt to do an in-source build"
+      ""
+    ALWAYS_FAIL_ON_ZERO_RETURN
+  
+  )
+
+
 TRIBITS_ADD_ADVANCED_TEST( TribitsHelloWorld_DefaultGlobalTimeout
   OVERALL_WORKING_DIRECTORY TEST_NAME
   OVERALL_NUM_MPI_PROCS 1
@@ -374,6 +449,93 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsHelloWorld_CONFIGURE_OPTIONS_FILE
   )
 
 
+TRIBITS_ADD_ADVANCED_TEST( TribitsHelloWorld_Shared_NoVersion
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+  TEST_0 CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsHelloWorld_COMMON_CONFIG_ARGS}
+      -DBUILD_SHARED_LIBS=ON
+      ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsHelloWorld
+    PASS_REGULAR_EXPRESSION_ALL
+      "Configuring done"
+      "Generating done"
+    ALWAYS_FAIL_ON_NONZERO_RETURN
+  TEST_1 CMND make
+    ARGS ${CTEST_BUILD_FLAGS}
+    PASS_REGULAR_EXPRESSION_ALL
+      "Built target hello_world_lib"
+    ALWAYS_FAIL_ON_NONZERO_RETURN
+  TEST_2 CMND ls ARGS hello_world
+    PASS_REGULAR_EXPRESSION_ALL
+      "libhello_world_lib[.]so"
+    FAIL_REGULAR_EXPRESSION
+      "libhello_world_lib[.]so[.]SOVERSION"
+    ALWAYS_FAIL_ON_NONZERO_RETURN
+  )
+
+
+########################################################################
+# RawAndTribitsHelloWorld
+########################################################################
+
+
+TRIBITS_ADD_ADVANCED_TEST( RawAndTribitsHelloWorld_Raw
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+  TEST_0 CMND ${CMAKE_COMMAND}
+    ARGS
+      ${SERIAL_PASSTHROUGH_CONFIGURE_ARGS}
+      ${${PROJECT_NAME}_TRIBITS_DIR}/examples/RawAndTribitsHelloWorld
+    PASS_REGULAR_EXPRESSION_ALL
+      "Configuring done"
+      "Generating done"
+      "Build files have been written to: .*ExamplesUnitTests/TriBITS_RawAndTribitsHelloWorld"
+  TEST_1 CMND make
+    ARGS ${CTEST_BUILD_FLAGS}
+    PASS_REGULAR_EXPRESSION_ALL
+      "Built target hello_world_lib"
+      "Built target hello_world"
+      "Built target unit_tests"
+  TEST_2 CMND ${CMAKE_CTEST_COMMAND} ARGS -VV
+    PASS_REGULAR_EXPRESSION_ALL
+      ": test .*  Passed"
+      ": unit_test .*  Passed"
+      "100% tests passed, 0 tests failed out of 2"
+  )
+
+
+TRIBITS_ADD_ADVANCED_TEST( RawAndTribitsHelloWorld_Tribits
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+  TEST_0 CMND ${CMAKE_COMMAND}
+    ARGS
+      -DRawAndTribitsHelloWorld_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      ${SERIAL_PASSTHROUGH_CONFIGURE_ARGS}
+      ${RawAndTribitsHelloWorld_COMMON_CONFIG_ARGS}
+      -DRawAndTribitsHelloWorld_ENABLE_TESTS=ON
+      -DHelloWorld_ENABLE_CPACK_PACKAGING=ON
+      ${${PROJECT_NAME}_TRIBITS_DIR}/examples/RawAndTribitsHelloWorld
+    PASS_REGULAR_EXPRESSION_ALL
+      "Configuring done"
+      "Generating done"
+      "Build files have been written to: .*ExamplesUnitTests/TriBITS_RawAndTribitsHelloWorld"
+    FAIL_REGULAR_EXPRESSION
+      "Check for working Fortran compiler" # Should not be looking for Fortran!
+  TEST_1 CMND make
+    ARGS ${CTEST_BUILD_FLAGS}
+    PASS_REGULAR_EXPRESSION_ALL
+      "Built target hello_world_lib"
+      "Built target hello_world"
+      "Built target HelloWorld_unit_tests"
+  TEST_2 CMND ${CMAKE_CTEST_COMMAND} ARGS -VV
+    PASS_REGULAR_EXPRESSION_ALL
+      ": HelloWorld_hello_world .*  Passed"
+      ": HelloWorld_unit_tests .*  Passed"
+      "100% tests passed, 0 tests failed out of 2"
+  )
+
+
 ########################################################################
 # TribitsExampleProject
 ########################################################################
@@ -472,8 +634,8 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_ALL_ST_NoFortran
       "-- CMAKE_HOST_SYSTEM_NAME="
       "-- TribitsExProj_HOSTNAME="
 
-      "Warning: Setting TribitsExProj_ENABLE_WrapExternal=OFF because TribitsExProj_ENABLE_EXPORT_MAKEFILES"
-      "Warning: Setting TribitsExProj_ENABLE_MixedLang=OFF because TribitsExProj_ENABLE_Fortran"
+      "NOTE: Setting TribitsExProj_ENABLE_WrapExternal=OFF because TribitsExProj_ENABLE_EXPORT_MAKEFILES"
+      "NOTE: Setting TribitsExProj_ENABLE_MixedLang=OFF because TribitsExProj_ENABLE_Fortran"
       "Printing package dependencies ..."
       "-- TribitsExProj_PACKAGES: SimpleCxx MixedLang WithSubpackages WrapExternal"
       "-- TribitsExProj_SE_PACKAGES: SimpleCxx MixedLang WithSubpackagesA WithSubpackagesB WithSubpackagesC WithSubpackages WrapExternal"
@@ -578,6 +740,7 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_ALL_ST_NoFortran
       -DCMAKE_COMMAND=${CMAKE_COMMAND}
       -P ${CMAKE_CURRENT_SOURCE_DIR}/RunDummyPackageClientBulid.cmake
     PASS_REGULAR_EXPRESSION_ALL
+      "WithSubpackages_CMAKE_BUILD_TYPE = 'RELEASE'"
       "WithSubpackages_CXX_FLAGS = '.*'"
       "WithSubpackages_C_FLAGS = '.*'"
       "WithSubpackages_FORTRAN_FLAGS = '.*'"
@@ -650,6 +813,7 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_ALL_ST_NoFortran
       -P ${CMAKE_CURRENT_SOURCE_DIR}/RunDummyPackageClientBulid.cmake
     MESSAGE "Create and configure a dummy project that includes WithSubpackagesConfig.cmake"
     PASS_REGULAR_EXPRESSION_ALL
+      "WithSubpackages_CMAKE_BUILD_TYPE = 'RELEASE'"
       "WithSubpackages_CXX_FLAGS = '.*'"
       "WithSubpackages_C_FLAGS = '.*'"
       "WithSubpackages_FORTRAN_FLAGS = '.*'"
@@ -1106,7 +1270,7 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_ALL_ST
       -DTribitsExProj_ENABLE_INSTALL_CMAKE_CONFIG_FILES=ON
       ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
-      "Warning: Setting TribitsExProj_ENABLE_WrapExternal=OFF because "
+      "NOTE: Setting TribitsExProj_ENABLE_WrapExternal=OFF because "
       "Explicitly enabled packages on input .by user.:  0"
       "Explicitly disabled packages on input .by user or by default.:  WrapExternal 1"
       "Enabling all SE packages that are not currently disabled because of TribitsExProj_ENABLE_ALL_PACKAGES=ON "
@@ -1161,7 +1325,7 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_ALL_ST_LibPrefix
       -DTribitsExProj_LIBRARY_NAME_PREFIX=tep_
       ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
-      "Warning: Setting TribitsExProj_ENABLE_WrapExternal=OFF because "
+      "NOTE: Setting TribitsExProj_ENABLE_WrapExternal=OFF because "
       "Explicitly enabled packages on input .by user.:  0"
       "Explicitly disabled packages on input .by user or by default.:  WrapExternal 1"
       "Enabling all SE packages that are not currently disabled because of TribitsExProj_ENABLE_ALL_PACKAGES=ON "
@@ -1217,7 +1381,7 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_ALL_ST_LibUsage
       -DTribitsExProj_ENABLE_SECONDARY_TESTED_CODE=ON
       ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
-      "Warning: Setting TribitsExProj_ENABLE_WrapExternal=OFF because PYTHON_EXECUTABLE=''"
+      "NOTE: Setting TribitsExProj_ENABLE_WrapExternal=OFF because PYTHON_EXECUTABLE=''"
       "Final set of enabled packages:  SimpleCxx MixedLang WithSubpackages 3"
       "Final set of enabled SE packages:  SimpleCxx MixedLang WithSubpackagesA WithSubpackagesB WithSubpackagesC WithSubpackages 6"
       "Configuring done"
@@ -2178,7 +2342,24 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_MixedSharedStaticLibs_shared
       "Built target static_only_lib"
       "Linking CXX executable MixedSharedStaticLibsSharedOnly_test"
       "Linking CXX executable MixedSharedStaticLibsStaticExec_test"
-  TEST_5 CMND ${CMAKE_CTEST_COMMAND} ARGS -VV
+
+  TEST_5 CMND ls ARGS packages/simple_cxx/src
+    PASS_REGULAR_EXPRESSION_ALL
+      "libsimplecxx[.]so"
+      "libsimplecxx[.]so[.]01"
+      "libsimplecxx[.]so[.]1[.]1"
+
+  TEST_6 CMND ls ARGS MixedSharedStaticLibs/shared_only
+    PASS_REGULAR_EXPRESSION_ALL
+      "libshared_only_lib[.]so"
+      "libshared_only_lib[.]so[.]01"
+      "libshared_only_lib[.]so[.]1[.]1"
+
+  TEST_7 CMND ls ARGS MixedSharedStaticLibs/static_only
+    PASS_REGULAR_EXPRESSION_ALL
+      "libstatic_only_lib[.]a"
+
+  TEST_8 CMND ${CMAKE_CTEST_COMMAND} ARGS -VV
     PASS_REGULAR_EXPRESSION_ALL
       "MixedSharedStaticLibsSharedOnly_test.* Passed"
       "MixedSharedStaticLibsStaticExec_test.* Passed"
@@ -2187,7 +2368,8 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_MixedSharedStaticLibs_shared
   )
   # NOTE: The above test make sure that you can build a static library with
   # TRIBITS_ADD_LIBRARY( ... STATIC ...) in project that is defaulted to use
-  # shared libs with BUILD_SHARED_LIBS=ON.
+  # shared libs with BUILD_SHARED_LIBS=ON.  This also tests that the correct
+  # soversion links are created as well.
 
 
 TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_MixedSharedStaticLibs_static
@@ -2393,7 +2575,9 @@ IF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
   SET(RPATH_GREP_STR "@rpath/libsimplecxx[.].*[.]dylib;@rpath/libsimpletpl[.]dylib")
 ELSEIF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
   SET(RPATH_GREP_STR
-    "RPATH *${RPATH_CURRENT_TEST_DIR}/install/lib:${SimpleTpl_install_shared_DIR}/install/lib")
+    "R.*PATH *${RPATH_CURRENT_TEST_DIR}/install/lib:${SimpleTpl_install_shared_DIR}/install/lib")
+  # NOTE: Above matches both RPATH and RUNPATH which are used on differnt
+  # Linux systems.
 ENDIF()
 
 TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_SimpleTpl_RPATH_default
@@ -2468,7 +2652,7 @@ IF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
   SET(RPATH_GREP_STR "@rpath/libsimplecxx[.].*[.]dylib;@rpath/libsimpletpl[.]dylib")
 ELSEIF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
   SET(RPATH_GREP_STR
-    "RPATH *${SimpleTpl_install_shared_DIR}/install/lib")
+    "R.*PATH *${SimpleTpl_install_shared_DIR}/install/lib")
 ENDIF()
 
 TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_SimpleTpl_RPATH_no_SET_INSTALL_RPATH
@@ -2538,7 +2722,7 @@ IF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
   SET(RPATH_GREP_STR "@rpath/libsimplecxx[.].*[.]dylib;@rpath/libsimpletpl[.]dylib")
 ELSEIF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
   SET(RPATH_GREP_STR
-    "RPATH *${RPATH_CURRENT_TEST_DIR}/install2/nonstd_lib_location:${SimpleTpl_install_shared_DIR}/install/lib")
+    "R.*PATH *${RPATH_CURRENT_TEST_DIR}/install2/nonstd_lib_location:${SimpleTpl_install_shared_DIR}/install/lib")
 ENDIF()
 
 TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_SimpleTpl_RPATH_CMAKE_INSTALL_RPATH
@@ -2671,6 +2855,55 @@ IF (TribitsExampleProject_SimpleTpl_RPATH_CMAKE_SKIP_INSTALL_RPATH_run_NAMES
     ${TribitsExampleProject_SimpleTpl_RPATH_CMAKE_SKIP_INSTALL_RPATH_run_NAMES}
     PROPERTIES DEPENDS ${RPATH_CURRENT_TEST_NAME_NAME} )
 ENDIF()
+
+
+#
+# Test cmake/ProjectCompilerPostConfig.cmake
+#
+
+TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_ProjectCompilerPostConfig
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+  XHOSTTYPE Darwin
+
+  TEST_0
+    MESSAGE "Copy TribitsExampleProject so that we can copy in cmake/ProjectCompilerPostConfig.cmake."
+    CMND cp
+    ARGS -r ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleProject .
+
+  TEST_1
+    MESSAGE "Copy in dummy cmake/ProjectCompilerPostConfig.cmake."
+    CMND cp
+    ARGS ${CMAKE_CURRENT_SOURCE_DIR}/DummyProjectCompilerPostConfig.cmake  
+      TribitsExampleProject/cmake/ProjectCompilerPostConfig.cmake
+
+  TEST_2
+    MESSAGE "Configure SimpleCxx and trace includes"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsExampleProject_COMMON_CONFIG_ARGS}
+      -DTribitsExProj_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      -DTribitsExProj_ENABLE_Fortran=OFF
+      -DTribitsExProj_ENABLE_DEBUG=OFF
+      -DTribitsExProj_TRACE_FILE_PROCESSING=ON
+      -DTribitsExProj_ENABLE_SimpleCxx=ON
+      -DCMAKE_VERBOSE_MAKEFILE=ON
+      TribitsExampleProject
+    PASS_REGULAR_EXPRESSION_ALL
+      "-- File Trace: PROJECT    INCLUDE    .*/cmake/ProjectCompilerPostConfig[.]cmake"
+      "Configuring done"
+      "Generating done"
+    ALWAYS_FAIL_ON_NONZERO_RETURN
+
+  TEST_3
+    MESSAGE "VERBOSE Build the simplecxx lib and verify that the new compiler flags is added "
+    CMND make
+    ARGS simplecxx
+    PASS_REGULAR_EXPRESSION_ALL
+      "DDUMMY_DEFINE_JUST_TO_TEST_COMILER_POST_CONFIG"
+    ALWAYS_FAIL_ON_NONZERO_RETURN
+
+  )
 
 
 ########################################################################
@@ -2876,8 +3109,8 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleMetaProject_Empty
       -DTribitsExMetaProj_IGNORE_MISSING_EXTRA_REPOSITORIES=TRUE
       ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleMetaProject
     PASS_REGULAR_EXPRESSION_ALL
-      "WARNING: Ignoring missing extra repo 'TribitsExampleProject' as requested since .*/TribitsExampleMetaProject/TribitsExampleProject does not exist"
-      "WARNING: Ignoring missing extra repo 'TribitsExampleProjectAddons' as requested since .*/TribitsExampleMetaProject/TribitsExampleProjectAddons does not exist"
+      "NOTE: Ignoring missing extra repo 'TribitsExampleProject' as requested since .*/TribitsExampleMetaProject/TribitsExampleProject does not exist"
+      "NOTE: Ignoring missing extra repo 'TribitsExampleProjectAddons' as requested since .*/TribitsExampleMetaProject/TribitsExampleProjectAddons does not exist"
       "Final set of enabled SE packages:  0"
       "Final set of non-enabled SE packages:  0"
       "WARNING:  There were no packages configured so no libraries or tests/examples will be built"
@@ -3021,7 +3254,6 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_PASS
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DTribitsExProj_ENABLE_TESTS=ON
-      -DPkgWithUserErrors_ADD_LIBRARY_BEFORE_POST_PROCESS=TRUE
       TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
       "Explicitly enabled packages on input [(]by user[)]:  PkgWithUserErrors 1"
@@ -3070,8 +3302,8 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_PACKAGE_POST_
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DTribitsExProj_ENABLE_TESTS=ON
-      -DPkgWithUserErrors_SKIP_PACKAGE_POST_PROCESS=TRUE
-      -DPkgWithUserErrors_ADD_LIBRARY_BEFORE_POST_PROCESS=TRUE
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
+      -DPkgWithUserErrors_no_POSTPROCESS_call=TRUE
       TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
       "Processing enabled package: PkgWithUserErrors [(]Libs, Tests, Examples[)]"
@@ -3079,7 +3311,7 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_PACKAGE_POST_
     ALWAYS_FAIL_ON_ZERO_RETURN
   )
 
-TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_SKIP_PACKAGE_INIT
+TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_PACKAGE_INIT
   OVERALL_WORKING_DIRECTORY TEST_NAME
   OVERALL_NUM_MPI_PROCS 1
 
@@ -3095,7 +3327,6 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_SKIP_PACKAGE_
       TribitsExampleProject/.
 
   TEST_2
-    MESSAGE "Configure PkgWithUserErrors"
     CMND ${CMAKE_COMMAND}
     ARGS
       ${TribitsExampleProject_COMMON_CONFIG_ARGS}
@@ -3104,16 +3335,15 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_SKIP_PACKAGE_
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DTribitsExProj_ENABLE_TESTS=ON
-      -DPkgWithUserErrors_SKIP_TRIBITS_PACKAGE_INIT=TRUE
-      -DPkgWithUserErrors_ADD_LIBRARY_BEFORE_POST_PROCESS=TRUE
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
+      -DPkgWithUserErrors_ADD_LIBRARY_with_no_package_init=TRUE
       TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
-      "Must call TRIBITS_PACKAGE[(][)] before TRIBITS_ADD_LIBRARY[(][)]"
+      "Must call TRIBITS_PACKAGE[(][)] or TRIBITS_PACKAGE_DECL[(][)] before\n  TRIBITS_ADD_LIBRARY[(][)] in"
       "Configuring incomplete, errors occurred!"
     ALWAYS_FAIL_ON_ZERO_RETURN
 
   TEST_3
-    MESSAGE "Configure PkgWithUserErrors"
     CMND ${CMAKE_COMMAND}
     ARGS
       ${TribitsExampleProject_COMMON_CONFIG_ARGS}
@@ -3122,17 +3352,16 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_SKIP_PACKAGE_
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DTribitsExProj_ENABLE_TESTS=ON
-      -DPkgWithUserErrors_SKIP_TRIBITS_PACKAGE_INIT=TRUE
-      -DPkgWithUserErrors_ADD_LIBRARY_BEFORE_POST_PROCESS=FALSE
-      -DPkgWithUserErrors_ADD_EXECUTABLE_BEFORE_POST_PROCESS=TRUE
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
+      -DPkgWithUserErrors_ADD_LIBRARY_with_no_package_init=FALSE
+      -DPkgWithUserErrors_ADD_EXECUTABLE_with_no_package_init=TRUE
       TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
-      "Must call TRIBITS_PACKAGE[(][)] before TRIBITS_ADD_EXECUTABLE[(][)]"
+      "Must call TRIBITS_PACKAGE[(][)] or TRIBITS_PACKAGE_DECL[(][)] before\n  TRIBITS_ADD_EXECUTABLE[(][)] in"
       "Configuring incomplete, errors occurred!"
     ALWAYS_FAIL_ON_ZERO_RETURN
 
   TEST_4
-    MESSAGE "Configure PkgWithUserErrors"
     CMND ${CMAKE_COMMAND}
     ARGS
       ${TribitsExampleProject_COMMON_CONFIG_ARGS}
@@ -3141,19 +3370,58 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_SKIP_PACKAGE_
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DTribitsExProj_ENABLE_TESTS=ON
-      -DPkgWithUserErrors_SKIP_TRIBITS_PACKAGE_INIT=TRUE
-      -DPkgWithUserErrors_ADD_LIBRARY_BEFORE_POST_PROCESS=FALSE
-      -DPkgWithUserErrors_ADD_EXECUTABLE_BEFORE_POST_PROCESS=""
-      -DPkgWithUserErrors_SKIP_PACKAGE_TESTS=TRUE
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
+      -DPkgWithUserErrors_ADD_LIBRARY_with_no_package_init=FALSE
+      -DPkgWithUserErrors_ADD_EXECUTABLE_with_no_package_init=FALSE
+      -DPkgWithUserErrors_POSTPROCESS_with_no_package_init=TRUE
       TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
-      "Must call TRIBITS_PACKAGE[(][)] before TRIBITS_PACKAGE_POSTPROCESS[(][)]"
+      "Must call TRIBITS_PACKAGE[(][)] or TRIBITS_PACKAGE_DEF[(][)]"
+      "TRIBITS_PACKAGE_POSTPROCESS[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_5
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsExampleProject_COMMON_CONFIG_ARGS}
+      -DTribitsExProj_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      -DTribitsExProj_ENABLE_Fortran=OFF
+      -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
+      -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
+      -DTribitsExProj_ENABLE_TESTS=ON
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
+      -DPkgWithUserErrors_ADD_LIBRARY_with_no_package_init=FALSE
+      -DPkgWithUserErrors_ADD_EXECUTABLE_with_no_package_init=FALSE
+      -DPkgWithUserErrors_POSTPROCESS_with_no_package_init=FALSE
+      -DPkgWithUserErrors_multiple_calls_to_PACKAGE=TRUE
+      TribitsExampleProject
+    PASS_REGULAR_EXPRESSION_ALL
+      "Package .* declared more than once!"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_6
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsExampleProject_COMMON_CONFIG_ARGS}
+      -DTribitsExProj_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      -DTribitsExProj_ENABLE_Fortran=OFF
+      -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
+      -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
+      -DTribitsExProj_ENABLE_TESTS=ON
+      -DPkgWithUserErrors_multiple_calls_to_PACKAGE=FALSE
+      -DPkgWithUserErrors_using_package_with_subpackage_commands=TRUE
+      TribitsExampleProject
+    PASS_REGULAR_EXPRESSION_ALL
+      "The TriBITS Package 'PkgWithUserErrors' does not have any subpackages[.]"
+      "Therefore, you are not allowed to call TRIBITS_PROCESS_SUBPACKAGES[(][)]!"
       "Configuring incomplete, errors occurred!"
     ALWAYS_FAIL_ON_ZERO_RETURN
 
   )
 
-TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_TARGETS_AFTER_POSTPROCESS
+TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_AFTER_POSTPROCESS
   OVERALL_WORKING_DIRECTORY TEST_NAME
   OVERALL_NUM_MPI_PROCS 1
 
@@ -3178,8 +3446,8 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_TARGETS_AFTER
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DTribitsExProj_ENABLE_TESTS=ON
-      -DPkgWithUserErrors_ADD_LIBRARY_BEFORE_POST_PROCESS=FALSE
-      -DPkgWithUserErrors_ADD_LIBRARY_AFTER_POST_PROCESS=TRUE
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
+      -DPkgWithUserErrors_ADD_LIBRARY_after_POSTPROCESS=TRUE
       TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
       "Must call TRIBITS_ADD_LIBRARY[(][)] before TRIBITS_PACKAGE_POSTPROCESS[(][)] in"
@@ -3196,11 +3464,32 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_TARGETS_AFTER
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DTribitsExProj_ENABLE_TESTS=ON
-      -DPkgWithUserErrors_ADD_LIBRARY_AFTER_POST_PROCESS=FALSE
-      -DPkgWithUserErrors_ADD_EXECUTABLE_AFTER_POST_PROCESS=TRUE
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
+      -DPkgWithUserErrors_ADD_LIBRARY_after_POSTPROCESS=FALSE
+      -DPkgWithUserErrors_ADD_EXECUTABLE_after_POSTPROCESS=TRUE
       TribitsExampleProject
     PASS_REGULAR_EXPRESSION_ALL
       "Must call TRIBITS_ADD_EXECUTABLE[(][)] before TRIBITS_PACKAGE_POSTPROCESS[(][)] in"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_4
+    MESSAGE "Configure PkgWithUserErrors"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsExampleProject_COMMON_CONFIG_ARGS}
+      -DTribitsExProj_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      -DTribitsExProj_ENABLE_Fortran=OFF
+      -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
+      -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
+      -DTribitsExProj_ENABLE_TESTS=ON
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
+      -DPkgWithUserErrors_ADD_LIBRARY_after_POSTPROCESS=FALSE
+      -DPkgWithUserErrors_ADD_EXECUTABLE_after_POSTPROCESS=FALSE
+      -DPkgWithUserErrors_multiple_calls_to_POSTPROCESS=TRUE
+      TribitsExampleProject
+    PASS_REGULAR_EXPRESSION_ALL
+      "TRIBITS_PACKAGE_POSTPROCESS[(][)] has been called more than once in"
       "Configuring incomplete, errors occurred!"
     ALWAYS_FAIL_ON_ZERO_RETURN
 
@@ -3252,6 +3541,7 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_UNPARSED_ARGS
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DPkgWithUserErrors_UNPARSED_ARGS_DEFINE_DEPENDENCIES=OFF
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
       -DPkgWithUserErrors_UNPARSED_ARGS_ADD_LIBRARY=ON
       -DTribitsExProj_ENABLE_TESTS=ON
       TribitsExampleProject
@@ -3273,6 +3563,7 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_UNPARSED_ARGS
       -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithUserErrors
       -DTribitsExProj_ENABLE_PkgWithUserErrors=ON
       -DPkgWithUserErrors_UNPARSED_ARGS_DEFINE_DEPENDENCIES=OFF
+      -DPkgWithUserErrors_turn_off_passing_call_order=TRUE
       -DPkgWithUserErrors_UNPARSED_ARGS_ADD_LIBRARY=OFF
       -DPkgWithUserErrors_UNPARSED_ARGS_ADD_EXECUTABLE=ON
       -DTribitsExProj_ENABLE_TESTS=ON
@@ -3284,4 +3575,440 @@ TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithUserErrors_UNPARSED_ARGS
       "PkgWithUserErrors/CMakeLists.txt.*TRIBITS_ADD_EXECUTABLE"
       "-- Configuring incomplete, errors occurred!"
     ALWAYS_FAIL_ON_ZERO_RETURN
+  )
+
+
+TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithSubpkgsWithUserErrors_PASS
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+
+  TEST_0
+    MESSAGE "Copy TribitsExampleProject so that we can copy in PkgWithSubpkgsWithUserErrors."
+    CMND cp
+    ARGS -r ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleProject .
+
+  TEST_1
+    MESSAGE "Copy PkgWithSubpkgsWithUserErrors to base dir."
+    CMND cp
+    ARGS -r ${CMAKE_CURRENT_SOURCE_DIR}/PkgWithSubpkgsWithUserErrors
+      TribitsExampleProject/.
+
+  TEST_2
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsExampleProject_COMMON_CONFIG_ARGS}
+      -DTribitsExProj_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      -DTribitsExProj_ENABLE_Fortran=OFF
+      -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithSubpkgsWithUserErrors
+      -DTribitsExProj_ENABLE_PkgWithSubpkgsWithUserErrors=ON
+      -DTribitsExProj_ENABLE_TESTS=ON
+      TribitsExampleProject
+    PASS_REGULAR_EXPRESSION_ALL
+      "Explicitly enabled packages on input [(]by user[)]:  PkgWithSubpkgsWithUserErrors 1"
+      "Final set of enabled packages:  PkgWithSubpkgsWithUserErrors 1"
+      "Processing enabled package: PkgWithSubpkgsWithUserErrors [(]A, B, Tests, Examples[)]"
+      "Configuring done"
+      "Generating done" 
+    ALWAYS_FAIL_ON_NONZERO_RETURN
+
+  TEST_3 CMND make
+    ARGS ${CTEST_BUILD_FLAGS}
+    PASS_REGULAR_EXPRESSION_ALL
+      "libpwswue_a"
+      "libpwswue_b"
+      "PkgWithSubpkgsWithUserErrorsA_a_test"
+      "PkgWithSubpkgsWithUserErrorsB_b_test"
+    ALWAYS_FAIL_ON_NONZERO_RETURN
+
+  TEST_4 CMND ${CMAKE_CTEST_COMMAND} ARGS -VV
+    PASS_REGULAR_EXPRESSION_ALL
+      "Test [#]1: PkgWithSubpkgsWithUserErrorsA_test_of_a [.]+ +Passed"
+      "Test [#]2: PkgWithSubpkgsWithUserErrorsB_test_of_b [.]+ +Passed"
+    ALWAYS_FAIL_ON_NONZERO_RETURN
+  )
+
+TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithSubpkgsWithUserErrors_PACKAGE_USER_ERRORS
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+
+  TEST_0
+    MESSAGE "Copy TribitsExampleProject so that we can copy in PkgWithSubpkgsWithUserErrors."
+    CMND cp
+    ARGS -r ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleProject .
+
+  TEST_1
+    MESSAGE "Copy PkgWithSubpkgsWithUserErrors to base dir."
+    CMND cp
+    ARGS -r ${CMAKE_CURRENT_SOURCE_DIR}/PkgWithSubpkgsWithUserErrors
+      TribitsExampleProject/.
+
+  TEST_2
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsExampleProject_COMMON_CONFIG_ARGS}
+      -DTribitsExProj_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      -DTribitsExProj_ENABLE_Fortran=OFF
+      -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithSubpkgsWithUserErrors
+      -DTribitsExProj_ENABLE_PkgWithSubpkgsWithUserErrors=ON
+      -DTribitsExProj_ENABLE_TESTS=ON
+      -DPkgWithSubpkgsWithUserErrors_TURN_OFF_PASSING_CALL_ORDER=TRUE
+      -DPkgWithSubpkgsWithUserErrors_no_PACKAGE_DECL_before_PROCESS_SUBPACKAGES=TRUE
+      TribitsExampleProject
+    PASS_REGULAR_EXPRESSION_ALL
+      "Must call TRIBITS_PACKAGE_DECL[(][)] before TRIBITS_PROCESS_SUBPACKAGES[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_3
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_no_PACKAGE_DECL_before_PROCESS_SUBPACKAGES=FALSE
+      -DPkgWithSubpkgsWithUserErrors_POSTPROCESS_before_SUBPACKAGES=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      " Must call TRIBITS_PACKAGE_DECL[(][)], TRIBITS_PROCESS_SUBPACKAGES[(][)]and"
+      " TRIBITS_PACKAGE_DEF before TRIBITS_PACKAGE_POSTPROCESS[(][)].  Because this"
+      " package has subpackages you cannot use TRIBITS_PACKAGE[(][)] you must call"
+      " these in the following order: TRIBITS_PACKAGE_DECL"
+      " TRIBITS_PROCESS_SUBPACKAGES TRIBITS_PACKAGE_DEF TRIBITS_PACKAGE_POSTPROCESS"
+      " in file:"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_4
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_POSTPROCESS_before_SUBPACKAGES=FALSE
+      -DPkgWithSubpkgsWithUserErrors_PACKAGE_DEF_before_SUBPACKAGES=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Must call TRIBITS_PACKAGE_DEF[(][)] after TRIBITS_PROCESS_SUBPACKAGES[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_5
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_PACKAGE_DEF_before_SUBPACKAGES=FALSE
+      -DPkgWithSubpkgsWithUserErrors_multiple_calls_to_PACKAGE_DECL=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "TRIBITS_PACKAGE_DECL[(][)] called more than once"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_6
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_multiple_calls_to_PACKAGE_DECL=FALSE
+      -DPkgWithSubpkgsWithUserErrors_multiple_calls_to_PACKAGE_DEF=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "TRIBITS_PACKAGE_DEF was called more than once"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_7
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_multiple_calls_to_PACKAGE_DEF=FALSE
+      -DPkgWithSubpkgsWithUserErrors_call_PACKAGE_from_package_with_subpackages=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "This package has subpackages so you cannot use TRIBITS_PACKAGE"
+      "Instead use the following call order:"
+      "TRIBITS_PROJECT_DECL[(]PkgWithSubpkgsWithUserErrors[)]"
+      "TRIBITS_PROCESS_SUBPACKAGES"
+      "TRIBITS_PACKAGE_DEF"
+      "TRIBITS_PACKAGE_POSTPROCESS"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_8
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_call_PACKAGE_from_package_with_subpackages=FALSE
+      -DPkgWithSubpkgsWithUserErrors_call_PACKAGE_after_PROCESS_SUBPACKAGES=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "This package has subpackages so you cannot use TRIBITS_PACKAGE[(][)]"
+      "Instead use the following call order"
+      "TRIBITS_PROJECT_DECL[(]PkgWithSubpkgsWithUserErrors[)]"
+      "TRIBITS_PROCESS_SUBPACKAGES[(][)]"
+      "TRIBITS_PACKAGE_DEF[(][)]"
+      "TRIBITS_PACKAGE_POSTPROCESS[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_9
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_call_PACKAGE_after_PROCESS_SUBPACKAGES=FALSE
+      -DPkgWithSubpkgsWithUserErrors_call_everthing_except_PROCESS_SUBPACKAGES=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      " Must call TRIBITS_PACKAGE_DECL[(][)], TRIBITS_PROCESS_SUBPACKAGES[(][)]and"
+      " TRIBITS_PACKAGE_DEF before TRIBITS_PACKAGE_POSTPROCESS[(][)].  Because this"
+      " package has subpackages you cannot use TRIBITS_PACKAGE[(][)] you must call"
+      " these in the following order: TRIBITS_PACKAGE_DECL"
+      " TRIBITS_PROCESS_SUBPACKAGES TRIBITS_PACKAGE_DEF TRIBITS_PACKAGE_POSTPROCESS"
+      " in file:"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_10
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_call_everthing_except_PROCESS_SUBPACKAGES=FALSE
+      -DPkgWithSubpkgsWithUserErrors_call_PACKAGE_DECL_only=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      " Must call TRIBITS_PACKAGE_DECL[(][)], TRIBITS_PROCESS_SUBPACKAGES[(][)]and"
+      " TRIBITS_PACKAGE_DEF before TRIBITS_PACKAGE_POSTPROCESS[(][)].  Because this"
+      " package has subpackages you cannot use TRIBITS_PACKAGE[(][)] you must call"
+      " these in the following order: TRIBITS_PACKAGE_DECL"
+      " TRIBITS_PROCESS_SUBPACKAGES TRIBITS_PACKAGE_DEF TRIBITS_PACKAGE_POSTPROCESS"
+      " in file:"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_11
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_call_PACKAGE_DECL_only=FALSE
+      -DPkgWithSubpkgsWithUserErrors_call_SUBPACKAGE_from_package_with_subpackages=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Cannot call TRIBITS_SUBPACKAGE[(][)] from a package.  Use TRIBITS_PACKAGE[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_12
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DPkgWithSubpkgsWithUserErrors_call_SUBPACKAGE_from_package_with_subpackages=FALSE
+      -DPkgWithSubpkgsWithUserErrors_call_SUBPACKAGE_POSTPROCESS=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Cannot call TRIBITS_SUBPACKAGE_POSTPROCESS[(][)] from a package.  Use"
+      " TRIBITS_PACKAGE_POSTPROCESS[(][)] instead"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  )
+
+TRIBITS_ADD_ADVANCED_TEST( TribitsExampleProject_PkgWithSubpkgsWithUserErrors_SUBPACKAGE_USER_ERRORS
+  OVERALL_WORKING_DIRECTORY TEST_NAME
+  OVERALL_NUM_MPI_PROCS 1
+
+  TEST_0
+    MESSAGE "Copy TribitsExampleProject so that we can copy in PkgWithSubpkgsWithUserErrors."
+    CMND cp
+    ARGS -r ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleProject .
+
+  TEST_1
+    MESSAGE "Copy PkgWithSubpkgsWithUserErrors to base dir."
+    CMND cp
+    ARGS -r ${CMAKE_CURRENT_SOURCE_DIR}/PkgWithSubpkgsWithUserErrors
+      TribitsExampleProject/.
+
+  TEST_2
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      ${TribitsExampleProject_COMMON_CONFIG_ARGS}
+      -DTribitsExProj_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}
+      -DTribitsExProj_ENABLE_Fortran=OFF
+      -DTribitsExProj_EXTRA_REPOSITORIES=PkgWithSubpkgsWithUserErrors
+      -DTribitsExProj_ENABLE_PkgWithSubpkgsWithUserErrors=ON
+      -DTribitsExProj_ENABLE_TESTS=ON
+      -DsubpackageA_turn_off_passing_call_order=TRUE
+      -DsubPackageA_call_PACKAGE=TRUE
+      TribitsExampleProject
+    PASS_REGULAR_EXPRESSION_ALL
+      "Cannot call TRIBITS_PACKAGE[(][)] in a subpackage"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_3
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_call_PACKAGE=FALSE
+      -DsubPackageA_call_PACKAGE_DECL=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Cannot call TRIBITS_PACKAGE_DECL[(][)] in a subpackage"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_4
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_call_PACKAGE_DECL=FALSE
+      -DsubPackageA_call_PACKAGE_DEF=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Cannot call TRIBITS_PACKAGE_DEF[(][)] in a subpackage"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_5
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_call_PACKAGE_DEF=FALSE
+      -DsubPackageA_call_PROCESS_SUBPACKAGES=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Cannot call TRIBITS_PROCESS_SUBPACKAGES[(][)] in a subpackage"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_6
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_call_PACKAGE_POSTPROCESS=TRUE
+      -DsubPackageA_call_PROCESS_SUBPACKAGES=FALSE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Cannot call TRIBITS_PACKAGE_POSTPROCESS[(][)] in a subpackage"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_7
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_call_PACKAGE_POSTPROCESS=FALSE
+      -DsubPackageA_DOUBLE_SUBPACKAGE_INIT=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Already called TRIBITS_SUBPACKGE[(][)] for thePkgWithSubpkgsWithUserErrors"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_8
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_DOUBLE_SUBPACKAGE_INIT=FALSE
+      -DsubPAckageA_DOUBLE_SUBPACKAGE_POSTPROCESS=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Already called TRIBITS_SUBPACKGE_POSTPROCESS[(][)] for"
+      "thePkgWithSubpkgsWithUserErrors subpackage A"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_9
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_no_SUBPACKAGE_before_POSTPROCESS=TRUE
+      -DsubPAckageA_DOUBLE_SUBPACKAGE_POSTPROCESS=FALSE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "TRIBITS_SUBPACKAGE[(][)] must be called before"
+      "TRIBITS_SUBPACKAGE_POSTPROCESS[(][)]for the PkgWithSubpkgsWithUserErrors"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_10
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors library after postprocess"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_no_SUBPACKAGE_before_POSTPROCESS=FALSE
+      -DsubPackageA_ADD_LIBRARY_AFTER_POST_PROCESS=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Adding library in subpackage after post process"
+      "Must call TRIBITS_ADD_LIBRARY[(][)] before TRIBITS_SUBPACKAGE_POSTPROCESS[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_11
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors exec after postprocess"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_ADD_LIBRARY_AFTER_POST_PROCESS=FALSE
+      -DsubPackageA_ADD_EXECUTABLE_AFTER_POST_PROCESS=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Adding executable in subpackage after post process"
+      "Must call TRIBITS_ADD_EXECUTABLE[(][)] before TRIBITS_SUBPACKAGE_POSTPROCESS[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_12
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors lib with no preprocess"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_ADD_EXECUTABLE_AFTER_POST_PROCESS=FALSE
+      -DsubPackageA_add_lib_no_PREPROCESS=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Must call TRIBITS_SUBPACKAGE[(][)] before TRIBITS_ADD_LIBRARY[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_13
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors exec with no preprocess"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_add_lib_no_PREPROCESS=FALSE
+      -DsubPackageA_add_exe_no_PREPROCESS=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Must call TRIBITS_SUBPACKAGE[(][)] before TRIBITS_ADD_EXECUTABLE[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_14
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors exec with no preprocess"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_add_exe_no_PREPROCESS=FALSE
+      -DsubPackageA_call_ADD_TEST_DIRECTORY_without_SUBPACKAGE=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Must call TRIBITS_SUBPACKAGE[(][)] before TRIBITS_ADD_TEST_DIRECTORIES[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_15
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors exec with no preprocess"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_call_ADD_TEST_DIRECTORY_without_SUBPACKAGE=FALSE
+      -DsubPackageA_call_ADD_TEST_DIRECTORY_after_POSTPROCESS=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Must call TRIBITS_ADD_TEST_DIRECTORIES[(][)] before"
+      "TRIBITS_SUBPACKAGE_POSTPROCESS[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_16
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors exec with no preprocess"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_call_ADD_TEST_DIRECTORY_after_POSTPROCESS=FALSE
+      -DsubPackageA_call_ADD_EXAMPLE_DIRECTORY_without_SUBPACKAGE=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Must call TRIBITS_SUBPACKAGE[(][)] before TRIBITS_ADD_EXAMPLE_DIRECTORIES[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
+  TEST_17
+    MESSAGE "Configure PkgWithSubpkgsWithUserErrors exec with no preprocess"
+    CMND ${CMAKE_COMMAND}
+    ARGS
+      -DsubPackageA_call_ADD_EXAMPLE_DIRECTORY_without_SUBPACKAGE=FALSE
+      -DsubPackageA_call_ADD_EXAMPLE_DIRECTORY_after_POSTPROCESS=TRUE
+      .
+    PASS_REGULAR_EXPRESSION_ALL
+      "Must call TRIBITS_ADD_EXAMPLE_DIRECTORIES[(][)] before"
+      "TRIBITS_SUBPACKAGE_POSTPROCESS[(][)]"
+      "Configuring incomplete, errors occurred!"
+    ALWAYS_FAIL_ON_ZERO_RETURN
+
   )

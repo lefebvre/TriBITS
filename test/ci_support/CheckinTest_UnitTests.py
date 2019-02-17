@@ -75,6 +75,16 @@ class MockOptions:
     self.withCmake = "cmake"
 
 
+def assertFileExists(testObject, filePath):
+  testObject.assertEqual(os.path.isfile(filePath), True,
+    "Error, the file '" + filePath + "' does not exist!")
+
+
+def assertFileNotExists(testObject, filePath):
+  testObject.assertEqual(os.path.isfile(filePath), False,
+    "Error, the file '" + filePath + "' exists!")
+
+
 def assertGrepFileForRegexStrList(testObject, testName, fileName, regexStrList, verbose):
   testObject.assertEqual(os.path.isfile(fileName), True,
     "Error, the file '" + fileName + "' does not exist!")
@@ -806,7 +816,7 @@ class test_TribitsGitRepos(unittest.TestCase):
       GitRepo('preCopyrightTrilinos', 'preCopyrightTrilinos', "GIT", True),
       ]
     consoleRegexMatches = \
-      "WARNING: Ignoring missing extra repo .MissingRepo. as requested since\n"
+      "NOTE: Ignoring missing extra repo .MissingRepo. as requested since\n"
     consoleRegexNotMatches = \
       "Adding POST extra Continuous repository MissingRepo"
     test_TribitsGitRepos_run_case(self, testName, inOptions, expectedPass, \
@@ -1573,6 +1583,8 @@ g_verbose=False
 g_checkin_test_tests_dir = "checkin_test_tests"
 
 
+
+
 def create_checkin_test_case_dir(testName, verbose=False):
   baseDir = os.getcwd()
   testDirName = os.path.join(g_checkin_test_tests_dir, testName)
@@ -1585,7 +1597,9 @@ def create_checkin_test_case_dir(testName, verbose=False):
 def checkin_test_run_case(testObject, testName, optionsStr, cmndInterceptsStr, \
   expectPass, passRegexStrList, filePassRegexStrList=None, mustHaveCheckinTestOut=True, \
   failRegexStrList=None, fileFailRegexStrList=None, envVars=[], inPathGit=True, \
-  grepForFinalPassFailStr=True \
+  grepForFinalPassFailStr=True, \
+  logFileName=None, \
+  printOutputFile=False
   ):
 
   verbose = g_verbose
@@ -1608,7 +1622,7 @@ def checkin_test_run_case(testObject, testName, optionsStr, cmndInterceptsStr, \
   try:
 
     # B) Create the command to run the checkin-test.py script
-    
+
     cmndArgs = [
       tribitsBaseDir + "/ci_support/checkin-test.py",
       "--with-cmake=\""+g_withCmake+"\"",
@@ -1619,6 +1633,13 @@ def checkin_test_run_case(testObject, testName, optionsStr, cmndInterceptsStr, \
         'CheckinTest_UnitTests_Config.py'),
       optionsStr,
       ]
+    
+    if logFileName:
+      logFileNameExpected = logFileName
+      cmndArgs.append("--log-file="+logFileName)
+    else:
+      logFileNameExpected = "checkin-test.out"
+
     cmnd = ' '.join(cmndArgs)
     
     # C) Set up the command intercept file
@@ -1665,9 +1686,15 @@ def checkin_test_run_case(testObject, testName, optionsStr, cmndInterceptsStr, \
     # E) Grep the main output file looking for specific strings
 
     if mustHaveCheckinTestOut:
-      outputFileToGrep = "checkin-test.out"
+      if logFileName:
+        outputFileToGrep = logFileName
+      else:
+        outputFileToGrep = "checkin-test.out"
     else:
       outputFileToGrep = checkin_test_test_out
+
+    if printOutputFile:
+      print(readStrFromFile(outputFileToGrep))
 
     assertGrepFileForRegexStrList(testObject, testName, outputFileToGrep,
       passRegexStrList, verbose)
@@ -1731,7 +1758,7 @@ def g_test_do_all_default_builds_mpi_debug_pass(testObject, testName):
     +"1) SERIAL_RELEASE => Test case SERIAL_RELEASE was not run! => Does not affect push readiness!\n" \
     +g_expectedCommonOptionsSummary \
     +"=> A PUSH IS READY TO BE PERFORMED!\n" \
-    +"^READY TO PUSH: Trilinos:\n" \
+    +"^PASSED [(]READY TO PUSH[)]: Trilinos:\n" \
     ,
     \
     failRegexStrList = \
@@ -1847,7 +1874,7 @@ def  g_test_st_extra_builds_st_do_all_pass(testObject, testName):
     +"passed: Trilinos/MPI_DEBUG_ST: passed=100,notpassed=0\n" \
     +"0) MPI_DEBUG => Skipped configure, build, test due to no enabled packages! => Does not affect push readiness!\n" \
     +"2) MPI_DEBUG_ST => passed: passed=100,notpassed=0\n" \
-    +"^READY TO PUSH\n" \
+    +"^PASSED [(]READY TO PUSH[)]\n" \
     )
 
 
@@ -1915,7 +1942,9 @@ class test_checkin_test(unittest.TestCase):
       "", # No shell commands!
       True,
       "Script: checkin-test.py\n" \
+      +"\-\-use-makefiles\n" \
       +"\-\-send-build-case-email=always\n" \
+      +"\-\-log-file=.checkin-test.out.\n" \
       ,
       mustHaveCheckinTestOut=False \
       ,
@@ -2007,11 +2036,15 @@ class test_checkin_test(unittest.TestCase):
 
 
   def test_do_all_push_pass(self):
+
+    testName = "do_all_push_pass"
+    testBaseDir = create_checkin_test_case_dir(testName, g_verbose)
+
     checkin_test_run_case(
       \
       self,
       \
-      "do_all_push_pass",
+      testName,
       \
       "--make-options=-j3 --ctest-options=-j5" \
       +" --abort-gracefully-if-no-changes-pulled --abort-gracefully-if-no-changes-to-push" \
@@ -2094,6 +2127,72 @@ class test_checkin_test(unittest.TestCase):
       ]
       )
 
+    # Make sure that the success files don't exist after a successful push
+    assertFileNotExists(self, testBaseDir+"/pullInitial.success")
+    mpiDebugDir=testBaseDir+"/MPI_DEBUG"
+    assertFileNotExists(self, mpiDebugDir+"/configure.success")
+    assertFileNotExists(self, mpiDebugDir+"/make.success")
+    assertFileNotExists(self, mpiDebugDir+"/ctest.success")
+    assertFileNotExists(self, mpiDebugDir+"/email.success")
+    assertFileNotExists(self, mpiDebugDir+"/email.out")
+    serialReleaseDir=testBaseDir+"/SERIAL_RELEASE"
+    assertFileNotExists(self, serialReleaseDir+"/configure.success")
+    assertFileNotExists(self, serialReleaseDir+"/make.success")
+    assertFileNotExists(self, serialReleaseDir+"/ctest.success")
+    assertFileNotExists(self, serialReleaseDir+"/email.success")
+    assertFileNotExists(self, serialReleaseDir+"/email.out")
+
+    # Make sure that the readyness check after the push reports the right
+    # status.
+    checkin_test_run_case(
+      \
+      self,
+      \
+      testName,
+      \
+      "",  # Just the default the readyness check!
+      \
+      g_cmndinterceptsDumpDepsXMLFile \
+      +cmndinterceptsGetRepoStatsPass() \
+      +g_cmndinterceptsLogCommitsPasses \
+      +g_cmndinterceptsSendFinalEmail \
+      ,
+      \
+      False,
+      "Skipping getting list of modified files because pull failed!\n" \
+      +"Not performing any build cases because no --configure, --build or --test was specified!\n" \
+      +"0) MPI_DEBUG => Error, The build/test was never completed! (the file .MPI_DEBUG/email.out. does not exist.) => Not ready to push! (-1.00 min)\n" \
+      +"1) SERIAL_RELEASE => Error, The build/test was never completed! (the file .SERIAL_RELEASE/email.out. does not exist.) => Not ready to push! (-1.00 min)\n" \
+      +"^INITIAL PULL FAILED: Trilinos:\n"\
+      +"REQUESTED ACTIONS: FAILED\n" \
+      )
+
+    # Make sure that the readyness check ignoring no --pull returns the right
+    # status status.
+    checkin_test_run_case(
+      \
+      self,
+      \
+      testName,
+      \
+      "--allow-no-pull",
+      \
+      g_cmndinterceptsDumpDepsXMLFile \
+      +cmndinterceptsGetRepoStatsPass() \
+      +g_cmndinterceptsDiffOnlyPasses \
+      +g_cmndinterceptsLogCommitsPasses \
+      +g_cmndinterceptsSendFinalEmail \
+      ,
+      \
+      False,
+      "Not performing pull since --allow-no-pull was passed in\n" \
+      +"Not performing any build cases because no --configure, --build or --test was specified!\n" \
+      +"0) MPI_DEBUG => Error, The build/test was never completed! (the file .MPI_DEBUG/email.out. does not exist.) => Not ready to push! (-1.00 min)\n" \
+      +"1) SERIAL_RELEASE => Error, The build/test was never completed! (the file .SERIAL_RELEASE/email.out. does not exist.) => Not ready to push! (-1.00 min)\n" \
+      +"^FAILED (NOT READY TO PUSH): Trilinos:\n"\
+      +"REQUESTED ACTIONS: FAILED\n" \
+      )
+
 
   def test_send_build_case_email_only_on_failure_do_all_push_pass(self):
     checkin_test_run_case(
@@ -2120,7 +2219,7 @@ class test_checkin_test(unittest.TestCase):
       +"1) SERIAL_RELEASE => passed: passed=100,notpassed=0\n" \
       +"mailx .* trilinos-checkin-tests.*\n" \
       +"^DID PUSH: Trilinos:\n" \
-      ,
+      ,logFileName="checkin-test.other.out"
       )
 
 
@@ -2153,7 +2252,15 @@ class test_checkin_test(unittest.TestCase):
 
 
   def test_do_all_default_builds_mpi_debug_pass(self):
-    g_test_do_all_default_builds_mpi_debug_pass(self, "do_all_default_builds_mpi_debug_pass")
+    testName = "do_all_default_builds_mpi_debug_pass"
+    testBaseDir = create_checkin_test_case_dir(testName, g_verbose)
+    g_test_do_all_default_builds_mpi_debug_pass(self, testName) 
+    mpiDebugDir=testBaseDir+"/MPI_DEBUG"
+    assertFileExists(self, mpiDebugDir+"/configure.success")
+    assertFileExists(self, mpiDebugDir+"/make.success")
+    assertFileExists(self, mpiDebugDir+"/ctest.success")
+    assertFileExists(self, mpiDebugDir+"/email.success")
+    assertFileExists(self, mpiDebugDir+"/email.out")
 
 
   def test_local_do_all_default_builds_mpi_debug_pass(self):
@@ -2187,7 +2294,7 @@ class test_checkin_test(unittest.TestCase):
       +"A current successful pull does \*not\* exist => Not ready for final push!\n" \
       +"Explanation: In order to safely push, the local working directory needs\n" \
       +"A PUSH IS \*NOT\* READY TO BE PERFORMED!\n" \
-      +"^NOT READY TO PUSH: Trilinos:\n" \
+      +"^PASSED [(]NOT READY TO PUSH[)]: Trilinos:\n" \
       +"Not executing final command (ssh -q godel /some/dir/some_command.sh &) since a push is not okay to be performed!\n" \
       )
 
@@ -2223,7 +2330,7 @@ class test_checkin_test(unittest.TestCase):
       +g_expectedCommonOptionsSummary \
       +"A current successful pull does \*not\* exist => Not ready for final push!\n" \
       +"A PUSH IS \*NOT\* READY TO BE PERFORMED!\n" \
-      +"^NOT READY TO PUSH: Trilinos:\n" \
+      +"^PASSED [(]NOT READY TO PUSH[)]: Trilinos:\n" \
       )
 
 
@@ -2268,6 +2375,8 @@ class test_checkin_test(unittest.TestCase):
 
     testName = "do_all_default_builds_mpi_debug_then_wipe_clean_pull_pass"
 
+    testBaseDir = create_checkin_test_case_dir(testName, g_verbose)
+
     # Do the build/test only first (ready to push)
     g_test_do_all_default_builds_mpi_debug_pass(self, testName)
 
@@ -2294,8 +2403,11 @@ class test_checkin_test(unittest.TestCase):
       "Running: rm -rf MPI_DEBUG\n" \
       +"0) MPI_DEBUG => No configure, build, or test for MPI_DEBUG was requested! => Not ready to push!\n" \
       +"=> A PUSH IS \*NOT\* READY TO BE PERFORMED!\n" \
-      +"^NOT READY TO PUSH: Trilinos:\n"
+      +"^PASSED [(]NOT READY TO PUSH[)]: Trilinos:\n"
       )
+
+    assertFileExists(self, testBaseDir+"/pullInitial.success")
+
 
 
   def test_remove_existing_configure_files(self):
@@ -2412,11 +2524,13 @@ class test_checkin_test(unittest.TestCase):
 
 
   def test_do_all_no_append_test_results_push_pass(self):
+    testName = "do_all_no_append_test_results_push_pass"
+    testBaseDir = create_checkin_test_case_dir(testName, g_verbose)
     checkin_test_run_case(
       \
       self,
       \
-      "do_all_no_append_test_results_push_pass",
+      testName,
       \
       "--make-options=-j3 --ctest-options=-j5" \
       +" --do-all --no-append-test-results --push",
@@ -2528,8 +2642,13 @@ class test_checkin_test(unittest.TestCase):
       +"Enabled Packages: Stalix\n" \
       ,
       \
-      envVars = [ "CHECKIN_TEST_DEPS_XML_FILE_OVERRIDE="+projectDepsXmlFileOverride ]
+      envVars = [ "CHECKIN_TEST_DEPS_XML_FILE_OVERRIDE="+projectDepsXmlFileOverride,
+        "GITDIST_UNIT_TEST_STTY_SIZE=60 120" \
+         ]
       )
+    # NOTE: Above, we set GITDIST_UNIT_TEST_STTY_SIZE=120 so that
+    # checkin-test.py will print the full table reguardless what the terminal
+    # size is in the env where this runs.
 
 
   def test_extra_repo_1_implicit_enable_configure_pass(self):
@@ -3560,7 +3679,7 @@ class test_checkin_test(unittest.TestCase):
       \
       True,
       \
-      "WARNING: Ignoring missing extra repo .MissingRepo. as requested since\n" \
+      "NOTE: Ignoring missing extra repo .MissingRepo. as requested since\n" \
       "Pulling in packages from POST extra repos: preCopyrightTrilinos ...\n" \
       ,
       mustHaveCheckinTestOut=False
@@ -3919,7 +4038,7 @@ class test_checkin_test(unittest.TestCase):
       +"Not performing any build cases because no --configure, --build or --test was specified!\n" \
       +"0) MPI_DEBUG => No configure, build, or test for MPI_DEBUG was requested! => Not ready to push!\n" \
       +"A PUSH IS \*NOT\* READY TO BE PERFORMED!\n" \
-      +"^NOT READY TO PUSH: Trilinos:\n"
+      +"^PASSED [(]NOT READY TO PUSH[)]: Trilinos:\n"
       )
 
 
@@ -4081,7 +4200,7 @@ class test_checkin_test(unittest.TestCase):
       +"No need for repos to be on a branch with a tracking branch!\n" \
       +"Skipping getting list of modified files because not needed!\n" \
       +"Not performing any build cases because no --configure, --build or --test was specified!\n" \
-      +"NOT READY TO PUSH:\n" \
+      +"PASSED [(]NOT READY TO PUSH[)]:\n" \
       )
 
 
@@ -4155,7 +4274,7 @@ class test_checkin_test(unittest.TestCase):
       +"git pull somerepo remotebranch\n" \
       +"Not performing any build cases because no --configure, --build or --test was specified!\n" \
       +"A PUSH IS \*NOT\* READY TO BE PERFORMED!\n" \
-      +"^NOT READY TO PUSH: Trilinos:\n"
+      +"^PASSED [(]NOT READY TO PUSH[)]: Trilinos:\n"
       )
 
 
@@ -4207,7 +4326,7 @@ class test_checkin_test(unittest.TestCase):
       "Skipping the tests on request!\n" \
       "0) MPI_DEBUG => passed: configure-only passed => Not ready to push!\n" \
       "A PUSH IS \*NOT\* READY TO BE PERFORMED!\n" \
-      "NOT READY TO PUSH: Trilinos:\n"
+      "PASSED [(]NOT READY TO PUSH[)]: Trilinos:\n"
       )
 
 
@@ -4236,7 +4355,7 @@ class test_checkin_test(unittest.TestCase):
       "Skipping the tests on request!\n" \
       "0) MPI_DEBUG => passed: build-only passed => Not ready to push!\n" \
       "A PUSH IS \*NOT\* READY TO BE PERFORMED!\n" \
-      "NOT READY TO PUSH: Trilinos:\n"
+      "PASSED [(]NOT READY TO PUSH[)]: Trilinos:\n"
       )
 
 
@@ -4752,7 +4871,7 @@ class test_checkin_test(unittest.TestCase):
       \
       "0) MPI_DEBUG => passed: passed=100,notpassed=0\n" \
       "=> A PUSH IS READY TO BE PERFORMED!\n" \
-      "^READY TO PUSH: Trilinos:\n"
+      "^PASSED [(]READY TO PUSH[)]: Trilinos:\n"
       )
 
 
@@ -4785,7 +4904,7 @@ class test_checkin_test(unittest.TestCase):
       \
       "0) MPI_DEBUG => passed: skipped configure, build, test due to no enabled packages\n" \
       +"2) MPI_DEBUG_ST => passed: passed=100,notpassed=0\n" \
-      +"^READY TO PUSH\n" \
+      +"^PASSED [(]READY TO PUSH[)]\n" \
       )
 
 
@@ -5874,6 +5993,49 @@ class test_checkin_test(unittest.TestCase):
       ,
       \
       envVars = [ "CHECKIN_TEST_DEPS_XML_FILE_OVERRIDE="+projectDepsXmlFileOverride ]
+      )
+
+
+  # G) Test --use-ninja
+
+  def test_use_ninja_build_only(self):
+    checkin_test_run_case(
+      self,
+      \
+      "use_ninja_build_only",
+      \
+      "--make-options=\"-j6 -k 99999\" --default-builds=MPI_DEBUG" \
+      +" --use-ninja --pull --configure --build",
+      \
+      g_cmndinterceptsDumpDepsXMLFile \
+      +g_cmndinterceptsPullPasses \
+      +g_cmndinterceptsConfigPasses \
+      +"IT: ninja -j6 -k 99999; 0; 'ninja passed'\n" \
+      +g_cmndinterceptsSendBuildTestCaseEmail \
+      +g_cmndinterceptsLogCommitsPasses \
+      +g_cmndinterceptsSendFinalEmail \
+      ,
+      \
+      True,
+      \
+      g_expectedRegexUpdateWithBuildCasePasses+ \
+      "\-\-use-ninja\n" \
+      "Configure passed!\n" \
+      "touch configure.success\n" \
+      "Build passed!\n" \
+      "Skipping the tests on request!\n" \
+      "0) MPI_DEBUG => passed: build-only passed => Not ready to push!\n" \
+      "A PUSH IS \*NOT\* READY TO BE PERFORMED!\n" \
+      "^PASSED [(]NOT READY TO PUSH[)]: Trilinos:\n" \
+      ,
+      [
+        ("MPI_DEBUG/do-configure.base",
+         "\-GNinja\n"\
+           +"\-DTrilinos_ENABLE_TESTS:BOOL=ON\n" \
+           +"\-DCMAKE_BUILD_TYPE:STRING=RELEASE\n" \
+           +"\-DTrilinos_ENABLE_DEBUG:BOOL=ON\n" \
+           )
+        ]
       )
 
 
