@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # @HEADER
 # ************************************************************************
 #
@@ -95,11 +97,24 @@ class GitDistOptions:
 
 
 #
-# Unit tests for createAsciiTable
+# Unit tests for createTable
 #
 
 
-class test_createAsciiTable(unittest.TestCase):
+class test_createTable(unittest.TestCase):
+
+
+  def setUp(self):
+    self.gitdistMoveToBaseDir = os.environ.get("GITDIST_MOVE_TO_BASE_DIR", "")
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = ""
+    self.gitdistUnitTestSttySize = os.environ.get(
+      "GITDIST_UNIT_TEST_STTY_SIZE", ""
+    )
+
+
+  def tearDown(self):
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = self.gitdistMoveToBaseDir
+    os.environ["GITDIST_UNIT_TEST_STTY_SIZE"] = self.gitdistUnitTestSttySize
 
 
   def test_full_table(self):
@@ -116,9 +131,9 @@ class test_createAsciiTable(unittest.TestCase):
       { "label" : "M", "align":"R", "fields" : ["0", "2", "25" ] },
       { "label" : "?", "align":"R", "fields" : ["0", "0", "4" ] },
       ]
-    asciiTable = createAsciiTable(tableData)
-    #print(asciiTable)
-    asciiTable_expected = \
+    table = createTable(tableData)
+    #print(table)
+    table_expected = \
       "-------------------------------------------------------------------\n" \
       "| ID | Repo Dir           | Branch | Tracking Branch | C | M  | ? |\n" \
       "|----|--------------------|--------|-----------------|---|----|---|\n" \
@@ -126,7 +141,37 @@ class test_createAsciiTable(unittest.TestCase):
       "|  1 | ExtraRepo1         | master | origin/master   | 1 |  2 | 0 |\n" \
       "|  2 | Path/To/ExtraRepo2 | HEAD   |                 |   | 25 | 4 |\n" \
       "-------------------------------------------------------------------\n"
-    self.assertEqual(asciiTable, asciiTable_expected)
+    self.assertEqual(table, table_expected)
+
+
+  def test_full_table_utf8(self):
+    if sys.version_info < (3,):
+      print("Test disabled for Python 2.")
+    else:
+      tableData = [
+        { "label" : "ID", "align" : "R",
+          "fields" : ["0", "1", "2"] },
+        { "label" : "Repo Dir", "align" : "L",
+           "fields" : ["Base: BaseRepo", "ExtraRepo1", "Path/To/ExtraRepo2" ] },
+        { "label":"Branch", "align":"L",
+          "fields" : ["dummy", "master", "HEAD" ] },
+        { "label" : "Tracking Branch", "align":"L",
+          "fields" : ["", "origin/master", "" ] },
+        { "label" : "C", "align":"R", "fields" : ["", "1", "" ] },
+        { "label" : "M", "align":"R", "fields" : ["0", "2", "25" ] },
+        { "label" : "?", "align":"R", "fields" : ["0", "0", "4" ] },
+        ]
+      table = createTable(tableData, True)
+      #print(table)
+      table_expected = \
+        "┌────┬────────────────────┬────────┬─────────────────┬───┬────┬───┐\n" \
+        "│ ID │ Repo Dir           │ Branch │ Tracking Branch │ C │ M  │ ? │\n" \
+        "┝━━━━┿━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━┿━━━━━━━━━━━━━━━━━┿━━━┿━━━━┿━━━┥\n" \
+        "│  0 │ Base: BaseRepo     │ dummy  │                 │   │  0 │ 0 │\n" \
+        "│  1 │ ExtraRepo1         │ master │ origin/master   │ 1 │  2 │ 0 │\n" \
+        "│  2 │ Path/To/ExtraRepo2 │ HEAD   │                 │   │ 25 │ 4 │\n" \
+        "└────┴────────────────────┴────────┴─────────────────┴───┴────┴───┘\n"
+      self.assertEqual(table, table_expected)
 
 
   def test_no_rows(self):
@@ -143,14 +188,41 @@ class test_createAsciiTable(unittest.TestCase):
       { "label" : "M", "align":"R", "fields" : [] },
       { "label" : "?", "align":"R", "fields" : [] },
       ]
-    asciiTable = createAsciiTable(tableData)
-    #print(asciiTable)
-    asciiTable_expected = \
+    table = createTable(tableData)
+    #print(table)
+    table_expected = \
       "--------------------------------------------------------\n" \
       "| ID | Repo Dir | Branch | Tracking Branch | C | M | ? |\n" \
       "|----|----------|--------|-----------------|---|---|---|\n" \
       "--------------------------------------------------------\n"
-    self.assertEqual(asciiTable, asciiTable_expected)
+    self.assertEqual(table, table_expected)
+
+
+  def test_no_rows_utf8(self):
+    if sys.version_info < (3,):
+      print("Test disabled for Python 2.")
+    else:
+      tableData = [
+        { "label" : "ID", "align" : "R",
+          "fields" : [] },
+        { "label" : "Repo Dir", "align" : "L",
+           "fields" : [] },
+        { "label":"Branch", "align":"L",
+          "fields" : [] },
+        { "label" : "Tracking Branch", "align":"L",
+          "fields" : [] },
+        { "label" : "C", "align":"R", "fields" : [] },
+        { "label" : "M", "align":"R", "fields" : [] },
+        { "label" : "?", "align":"R", "fields" : [] },
+        ]
+      table = createTable(tableData, True)
+      #print(table)
+      table_expected = \
+        "┌────┬──────────┬────────┬─────────────────┬───┬───┬───┐\n" \
+        "│ ID │ Repo Dir │ Branch │ Tracking Branch │ C │ M │ ? │\n" \
+        "┝━━━━┿━━━━━━━━━━┿━━━━━━━━┿━━━━━━━━━━━━━━━━━┿━━━┿━━━┿━━━┥\n" \
+        "└────┴──────────┴────────┴─────────────────┴───┴───┴───┘\n"
+      self.assertEqual(table, table_expected)
 
 
   def test_one_row(self):
@@ -167,15 +239,43 @@ class test_createAsciiTable(unittest.TestCase):
       { "label" : "M", "align":"R", "fields" : ["25"] },
       { "label" : "?", "align":"R", "fields" : ["4"] },
       ]
-    asciiTable = createAsciiTable(tableData)
-    #print(asciiTable)
-    asciiTable_expected = \
+    table = createTable(tableData)
+    #print(table)
+    table_expected = \
       "----------------------------------------------------------------\n" \
       "| ID | Repo Dir       | Branch | Tracking Branch | C  | M  | ? |\n" \
       "|----|----------------|--------|-----------------|----|----|---|\n" \
       "|  0 | Base: BaseRepo | dummy  | origin/master   | 24 | 25 | 4 |\n" \
       "----------------------------------------------------------------\n"
-    self.assertEqual(asciiTable, asciiTable_expected)
+    self.assertEqual(table, table_expected)
+
+
+  def test_one_row_utf8(self):
+    if sys.version_info < (3,):
+      print("Test disabled for Python 2.")
+    else:
+      tableData = [
+        { "label" : "ID", "align" : "R",
+          "fields" : ["0"] },
+        { "label" : "Repo Dir", "align" : "L",
+           "fields" : ["Base: BaseRepo"] },
+        { "label":"Branch", "align":"L",
+          "fields" : ["dummy"] },
+        { "label" : "Tracking Branch", "align":"L",
+          "fields" : ["origin/master"] },
+        { "label" : "C", "align":"R", "fields" : ["24"] },
+        { "label" : "M", "align":"R", "fields" : ["25"] },
+        { "label" : "?", "align":"R", "fields" : ["4"] },
+        ]
+      table = createTable(tableData, True)
+      #print(table)
+      table_expected = \
+        "┌────┬────────────────┬────────┬─────────────────┬────┬────┬───┐\n" \
+        "│ ID │ Repo Dir       │ Branch │ Tracking Branch │ C  │ M  │ ? │\n" \
+        "┝━━━━┿━━━━━━━━━━━━━━━━┿━━━━━━━━┿━━━━━━━━━━━━━━━━━┿━━━━┿━━━━┿━━━┥\n" \
+        "│  0 │ Base: BaseRepo │ dummy  │ origin/master   │ 24 │ 25 │ 4 │\n" \
+        "└────┴────────────────┴────────┴─────────────────┴────┴────┴───┘\n"
+      self.assertEqual(table, table_expected)
 
 
   def test_row_mismatch(self):
@@ -185,8 +285,114 @@ class test_createAsciiTable(unittest.TestCase):
       { "label" : "Repo Dir", "align" : "L",
          "fields" : ["Base: BaseRepo"] },
       ]
-    #createAsciiTable(tableData)
-    self.assertRaises(Exception, createAsciiTable, tableData)
+    #createTable(tableData)
+    self.assertRaises(Exception, createTable, tableData)
+  
+
+  def create_stty_size_table(self):
+    tableData = [
+      { "label" : "ID", "align" : "R", "fields" : ["0", "1", "2"] },
+      { "label" : "Repo Dir", "align" : "L",
+        "fields" : [
+          "MockProjectDir (Base)",
+          "ExtraRepo1",
+          "really/long/path/to/ExtraRepo2"
+        ]
+      },
+      { "label" : "Branch", "align" : "L",
+        "fields" : [
+          "medium_branch",
+          "short_br",
+          "really_long_branch_name"
+        ]
+      },
+      { "label" : "Tracking Branch", "align" : "L",
+        "fields" : [
+          "medium_remote/medium_branch",
+          "origin/short_br",
+          "long_remote_name/really_long_branch_name"
+        ]
+      },
+      { "label" : "C", "align" : "R", "fields" : ["", "", ""] },
+      { "label" : "M", "align" : "R", "fields" : ["", "", ""] },
+      { "label" : "?", "align" : "R", "fields" : ["", "", ""] }
+    ]
+    return tableData
+
+
+  def test_stty_size_larger_than_needed(self):
+    os.environ["GITDIST_UNIT_TEST_STTY_SIZE"] = "60 140"
+    table = createTable(self.create_stty_size_table())
+    #print(table)
+    table_expected = \
+      "------------------------------------------------------------------------------------------------------------------------\n" \
+      "| ID | Repo Dir                       | Branch                  | Tracking Branch                          | C | M | ? |\n" \
+      "|----|--------------------------------|-------------------------|------------------------------------------|---|---|---|\n" \
+      "|  0 | MockProjectDir (Base)          | medium_branch           | medium_remote/medium_branch              |   |   |   |\n" \
+      "|  1 | ExtraRepo1                     | short_br                | origin/short_br                          |   |   |   |\n" \
+      "|  2 | really/long/path/to/ExtraRepo2 | really_long_branch_name | long_remote_name/really_long_branch_name |   |   |   |\n" \
+      "------------------------------------------------------------------------------------------------------------------------\n"
+    self.assertEqual(table, table_expected)
+
+
+  def test_stty_size_exactly_right(self):
+    os.environ["GITDIST_UNIT_TEST_STTY_SIZE"] = "60 120"
+    table = createTable(self.create_stty_size_table())
+    #print(table)
+    table_expected = \
+      "------------------------------------------------------------------------------------------------------------------------\n" \
+      "| ID | Repo Dir                       | Branch                  | Tracking Branch                          | C | M | ? |\n" \
+      "|----|--------------------------------|-------------------------|------------------------------------------|---|---|---|\n" \
+      "|  0 | MockProjectDir (Base)          | medium_branch           | medium_remote/medium_branch              |   |   |   |\n" \
+      "|  1 | ExtraRepo1                     | short_br                | origin/short_br                          |   |   |   |\n" \
+      "|  2 | really/long/path/to/ExtraRepo2 | really_long_branch_name | long_remote_name/really_long_branch_name |   |   |   |\n" \
+      "------------------------------------------------------------------------------------------------------------------------\n"
+    self.assertEqual(table, table_expected)
+
+
+  def test_stty_size_slightly_too_small(self):
+    os.environ["GITDIST_UNIT_TEST_STTY_SIZE"] = "60 106"
+    table = createTable(self.create_stty_size_table())
+    #print(table)
+    table_expected = \
+      "----------------------------------------------------------------------------------------------------------\n" \
+      "| ID | Repo Dir                  | Branch              | Tracking Branch                     | C | M | ? |\n" \
+      "|----|---------------------------|---------------------|-------------------------------------|---|---|---|\n" \
+      "|  0 | MockProjectDir (Base)     | medium_branch       | medium_remote/medium_branch         |   |   |   |\n" \
+      "|  1 | ExtraRepo1                | short_br            | origin/short_br                     |   |   |   |\n" \
+      "|  2 | really/long.../ExtraRepo2 | really_l...nch_name | long_remote_name...long_branch_name |   |   |   |\n" \
+      "----------------------------------------------------------------------------------------------------------\n"
+    self.assertEqual(table, table_expected)
+
+
+  def test_stty_size_significantly_too_small(self):
+    os.environ["GITDIST_UNIT_TEST_STTY_SIZE"] = "60 70"
+    table = createTable(self.create_stty_size_table())
+    #print(table)
+    table_expected = \
+      "----------------------------------------------------------------------\n" \
+      "| ID | Repo Dir      | Branch     | Tracking Branch      | C | M | ? |\n" \
+      "|----|---------------|------------|----------------------|---|---|---|\n" \
+      "|  0 | MockP...Base) | medi...nch | medium_re...m_branch |   |   |   |\n" \
+      "|  1 | ExtraRepo1    | short_br   | origin/short_br      |   |   |   |\n" \
+      "|  2 | reall...Repo2 | real...ame | long_remo...nch_name |   |   |   |\n" \
+      "----------------------------------------------------------------------\n"
+    self.assertEqual(table, table_expected)
+
+
+  def test_stty_size_too_small_for_heading(self):
+    os.environ["GITDIST_UNIT_TEST_STTY_SIZE"] = "60 50"
+    table = createTable(self.create_stty_size_table())
+    #print(table)
+    table_expected = \
+      "------------------------------------------------------------------------------------------------------------------------\n" \
+      "| ID | Repo Dir                       | Branch                  | Tracking Branch                          | C | M | ? |\n" \
+      "|----|--------------------------------|-------------------------|------------------------------------------|---|---|---|\n" \
+      "|  0 | MockProjectDir (Base)          | medium_branch           | medium_remote/medium_branch              |   |   |   |\n" \
+      "|  1 | ExtraRepo1                     | short_br                | origin/short_br                          |   |   |   |\n" \
+      "|  2 | really/long/path/to/ExtraRepo2 | really_long_branch_name | long_remote_name/really_long_branch_name |   |   |   |\n" \
+      "------------------------------------------------------------------------------------------------------------------------\n"
+    self.assertEqual(table, table_expected)
 
 
 #
@@ -195,6 +401,15 @@ class test_createAsciiTable(unittest.TestCase):
 
 
 class test_gitdist_getRepoStats(unittest.TestCase):
+
+
+  def setUp(self):
+    self.gitdistMoveToBaseDir = os.environ.get("GITDIST_MOVE_TO_BASE_DIR", "")
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = ""
+
+
+  def tearDown(self):
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = self.gitdistMoveToBaseDir
 
 
   def test_no_change(self):
@@ -562,7 +777,12 @@ class test_gitdist_getRepoVersionDictFromRepoVersionFileString(unittest.TestCase
 
 
   def setUp(self):
-    None
+    self.gitdistMoveToBaseDir = os.environ.get("GITDIST_MOVE_TO_BASE_DIR", "")
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = ""
+
+
+  def tearDown(self):
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = self.gitdistMoveToBaseDir
 
 
   def test_repoVersionFile_withSummary_1(self):
@@ -620,13 +840,27 @@ def assertContainsAllGitdistHelpSections(testObj, cmndOut):
     GeneralScriptSupport.extractLinesMatchingRegex(cmndOut,"^USAGE TIPS:$"), "USAGE TIPS:\n")
   testObj.assertEqual(
     GeneralScriptSupport.extractLinesMatchingRegex(cmndOut,"^SCRIPT DEPENDENCIES:$"), "SCRIPT DEPENDENCIES:\n")
+  testObj.assertEqual(
+    GeneralScriptSupport.extractLinesMatchingRegex(cmndOut,"^DEFAULT BRANCH SPECIFICATION:$"), "DEFAULT BRANCH SPECIFICATION:\n")
+  testObj.assertEqual(
+    GeneralScriptSupport.extractLinesMatchingRegex(cmndOut,"^MOVE TO BASE DIRECTORY:$"), "MOVE TO BASE DIRECTORY:\n")
 
 
 class test_gitdist(unittest.TestCase):
 
 
   def setUp(self):
-    None
+    self.gitdistMoveToBaseDir = os.environ.get("GITDIST_MOVE_TO_BASE_DIR", "")
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = ""
+    self.gitdistUnitTestSttySize = os.environ.get(
+      "GITDIST_UNIT_TEST_STTY_SIZE", ""
+    )
+    os.environ["GITDIST_UNIT_TEST_STTY_SIZE"] = "60 120"
+
+
+  def tearDown(self):
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = self.gitdistMoveToBaseDir
+    os.environ["GITDIST_UNIT_TEST_STTY_SIZE"] = self.gitdistUnitTestSttySize
 
 
   def test_default(self):
@@ -673,10 +907,10 @@ class test_gitdist(unittest.TestCase):
     assertContainsAllGitdistHelpSections(self, cmndOut)
 
 
-  # Tet that --dist-help --help prints nice error message
+  # Test that --dist-help --help prints nice error message
   def test_dist_help_help(self):
     cmndOut = getCmndOutput(gitdistPath+" --dist-help --help")
-    cmndOut_expected = "gitdist: error: option --dist-help: invalid choice: '--help' (choose from '', 'overview', 'repo-selection-and-setup', 'dist-repo-status', 'repo-versions', 'aliases', 'usage-tips', 'script-dependencies', 'all')\n"
+    cmndOut_expected = "gitdist: error: option --dist-help: invalid choice: '--help' (choose from '', 'overview', 'repo-selection-and-setup', 'dist-repo-status', 'repo-versions', 'aliases', 'default-branch', 'move-to-base-dir', 'usage-tips', 'script-dependencies', 'all')\n"
     self.assertEqual(s(cmndOut), s(cmndOut_expected))
 
 
@@ -684,7 +918,7 @@ class test_gitdist(unittest.TestCase):
   def test_dist_help_invalid_pick_help(self):
     cmndOut = getCmndOutput(gitdistPath+" --dist-help=invalid-pick --help")
     assertContainsGitdistHelpHeader(self, cmndOut)
-    errorToFind = "gitdist: error: option --dist-help: invalid choice: 'invalid-pick' (choose from '', 'overview', 'repo-selection-and-setup', 'dist-repo-status', 'repo-versions', 'aliases', 'usage-tips', 'script-dependencies', 'all')"
+    errorToFind = "gitdist: error: option --dist-help: invalid choice: 'invalid-pick' (choose from '', 'overview', 'repo-selection-and-setup', 'dist-repo-status', 'repo-versions', 'aliases', 'default-branch', 'move-to-base-dir', 'usage-tips', 'script-dependencies', 'all')"
     self.assertEqual(
       GeneralScriptSupport.extractLinesMatchingSubstr(cmndOut,errorToFind), errorToFind+"\n")
 
@@ -1270,6 +1504,44 @@ class test_gitdist(unittest.TestCase):
       os.chdir(testBaseDir)
 
 
+  def test_dist_repo_status_all_utf8(self):
+    if sys.version_info < (3,):
+      print("Test disabled for Python 2.")
+    else:
+      os.chdir(testBaseDir)
+      try:
+
+        # Create a mock git meta-project
+
+        testDir = createAndMoveIntoTestDir("gitdist_dist_repo_status_all")
+
+        os.mkdir("ExtraRepo1")
+        os.mkdir("ExtraRepo2")
+
+        writeGitMockProgram_base_3_2_1_repo1_22_0_2_repo2_0_0_0()
+
+        cmndOut = GeneralScriptSupport.getCmndOutput(
+          gitdistPath + " --dist-utf8-output --dist-no-color --dist-use-git=" \
+            +mockGitPath \
+            +" --dist-repos=.,ExtraRepo1,ExtraRepo2 dist-repo-status",
+          workingDir=testDir)
+        #print(cmndOut)
+        cmndOut_expected = \
+          "┌────┬───────────────────────┬───────────────┬─────────────────────────────┬────┬───┬───┐\n" \
+          "│ ID │ Repo Dir              │ Branch        │ Tracking Branch             │ C  │ M │ ? │\n" \
+          "┝━━━━┿━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━┿━━━┿━━━┥\n" \
+          "│  0 │ MockProjectDir (Base) │ local_branch0 │ origin_repo0/remote_branch0 │  3 │ 2 │ 1 │\n" \
+          "│  1 │ ExtraRepo1            │ local_branch1 │ origin_repo1/remote_branch1 │ 22 │   │ 1 │\n" \
+          "│  2 │ ExtraRepo2            │ local_branch2 │ origin_repo2/remote_branch2 │    │   │   │\n" \
+          "└────┴───────────────────────┴───────────────┴─────────────────────────────┴────┴───┴───┘\n" \
+          "\n" \
+          "(tip: to see a legend, pass in --dist-legend.)\n"
+        self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      finally:
+        os.chdir(testBaseDir)
+
+
   def test_dist_repo_status_mod_only_first(self):
     os.chdir(testBaseDir)
     try:
@@ -1301,6 +1573,43 @@ class test_gitdist(unittest.TestCase):
 
     finally:
       os.chdir(testBaseDir)
+
+
+  def test_dist_repo_status_mod_only_first_utf8(self):
+    if sys.version_info < (3,):
+      print("Test disabled for Python 2.")
+    else:
+      os.chdir(testBaseDir)
+      try:
+
+        # Create a mock git meta-project
+
+        testDir = createAndMoveIntoTestDir("gitdist_dist_repo_status_mod_only_first")
+
+        os.mkdir("ExtraRepo1")
+        os.mkdir("ExtraRepo2")
+
+        writeGitMockProgram_base_3_2_1_repo1_22_0_2_repo2_0_0_0()
+
+        cmndOut = GeneralScriptSupport.getCmndOutput(
+          gitdistPath + " --dist-utf8-output --dist-no-color --dist-use-git=" \
+            +mockGitPath \
+            +" --dist-repos=.,ExtraRepo1,ExtraRepo2 --dist-mod-only dist-repo-status",
+          workingDir=testDir)
+        #print(cmndOut)
+        cmndOut_expected = \
+          "┌────┬───────────────────────┬───────────────┬─────────────────────────────┬────┬───┬───┐\n" \
+          "│ ID │ Repo Dir              │ Branch        │ Tracking Branch             │ C  │ M │ ? │\n" \
+          "┝━━━━┿━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━┿━━━┿━━━┥\n" \
+          "│  0 │ MockProjectDir (Base) │ local_branch0 │ origin_repo0/remote_branch0 │  3 │ 2 │ 1 │\n" \
+          "│  1 │ ExtraRepo1            │ local_branch1 │ origin_repo1/remote_branch1 │ 22 │   │ 1 │\n" \
+          "└────┴───────────────────────┴───────────────┴─────────────────────────────┴────┴───┴───┘\n" \
+          "\n" \
+          "(tip: to see a legend, pass in --dist-legend.)\n"
+        self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      finally:
+        os.chdir(testBaseDir)
 
 
   def test_dist_repo_status_mod_only_first_legend(self):
@@ -1344,6 +1653,51 @@ class test_gitdist(unittest.TestCase):
       os.chdir(testBaseDir)
 
 
+  def test_dist_repo_status_mod_only_first_legend_utf8(self):
+    if sys.version_info < (3,):
+      print("Test disabled for Python 2.")
+    else:
+      os.chdir(testBaseDir)
+      try:
+
+        # Create a mock git meta-project
+
+        testDir = createAndMoveIntoTestDir("gitdist_dist_repo_status_mod_only_first_legend")
+
+        os.mkdir("ExtraRepo1")
+        os.mkdir("ExtraRepo2")
+
+        writeGitMockProgram_base_3_2_1_repo1_22_0_2_repo2_0_0_0()
+
+        cmndOut = GeneralScriptSupport.getCmndOutput(
+          gitdistPath + " --dist-utf8-output --dist-no-color --dist-use-git=" \
+            +mockGitPath \
+            +" --dist-repos=.,ExtraRepo1,ExtraRepo2 --dist-mod-only" \
+            +" --dist-legend dist-repo-status",
+          workingDir=testDir)
+        #print("+++++++++\n" + cmndOut + "+++++++\n")
+        cmndOut_expected = \
+          "┌────┬───────────────────────┬───────────────┬─────────────────────────────┬────┬───┬───┐\n" \
+          "│ ID │ Repo Dir              │ Branch        │ Tracking Branch             │ C  │ M │ ? │\n" \
+          "┝━━━━┿━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━┿━━━┿━━━┥\n" \
+          "│  0 │ MockProjectDir (Base) │ local_branch0 │ origin_repo0/remote_branch0 │  3 │ 2 │ 1 │\n" \
+          "│  1 │ ExtraRepo1            │ local_branch1 │ origin_repo1/remote_branch1 │ 22 │   │ 1 │\n" \
+          "└────┴───────────────────────┴───────────────┴─────────────────────────────┴────┴───┴───┘\n" \
+          "\n" \
+          "Legend:\n" \
+          "* ID: Repository ID, zero based (order git commands are run)\n" \
+          "* Repo Dir: Relative to base repo (base repo shown first with '(Base)')\n" \
+          "* Branch: Current branch (or detached HEAD)\n" \
+          "* Tracking Branch: Tracking branch (or empty if no tracking branch exists)\n" \
+          "* C: Number local commits w.r.t. tracking branch (empty if zero or no TB)\n" \
+          "* M: Number of tracked modified (uncommitted) files (empty if zero)\n" \
+          "* ?: Number of untracked, non-ignored files (empty if zero)\n\n"
+        self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      finally:
+        os.chdir(testBaseDir)
+
+
   def test_dist_repo_status_mod_only_first_last(self):
     os.chdir(testBaseDir)
     try:
@@ -1377,6 +1731,43 @@ class test_gitdist(unittest.TestCase):
       os.chdir(testBaseDir)
 
 
+  def test_dist_repo_status_mod_only_first_last_utf8(self):
+    if sys.version_info < (3,):
+      print("Test disabled for Python 2.")
+    else:
+      os.chdir(testBaseDir)
+      try:
+
+        # Create a mock git meta-project
+
+        testDir = createAndMoveIntoTestDir("gitdist_dist_repo_status_mod_only_first_last")
+
+        os.mkdir("ExtraRepo1")
+        os.mkdir("ExtraRepo2")
+
+        writeGitMockProgram_base_3_2_1_repo1_0_0_0_repo2_4_0_2()
+
+        cmndOut = GeneralScriptSupport.getCmndOutput(
+          gitdistPath + " --dist-utf8-output --dist-no-color --dist-use-git=" \
+            +mockGitPath \
+            +" --dist-repos=.,ExtraRepo1,ExtraRepo2 --dist-mod-only dist-repo-status",
+          workingDir=testDir)
+        #print(cmndOut)
+        cmndOut_expected = \
+          "┌────┬───────────────────────┬───────────────┬─────────────────────────────┬───┬───┬───┐\n" \
+          "│ ID │ Repo Dir              │ Branch        │ Tracking Branch             │ C │ M │ ? │\n" \
+          "┝━━━━┿━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━┿━━━┿━━━┥\n" \
+          "│  0 │ MockProjectDir (Base) │ local_branch0 │ origin_repo0/remote_branch0 │ 3 │ 2 │ 1 │\n" \
+          "│  2 │ ExtraRepo2            │ local_branch2 │ origin_repo2/remote_branch2 │ 4 │   │ 2 │\n" \
+          "└────┴───────────────────────┴───────────────┴─────────────────────────────┴───┴───┴───┘\n" \
+          "\n" \
+          "(tip: to see a legend, pass in --dist-legend.)\n"
+        self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      finally:
+        os.chdir(testBaseDir)
+
+
   def test_dist_repo_status_extra_args_fail(self):
     os.chdir(testBaseDir)
     try:
@@ -1395,6 +1786,198 @@ class test_gitdist(unittest.TestCase):
         "Error, passing in extra git commands/args ='--name-status' with special comamnd 'dist-repo-status is not allowed!\n"
       self.assertEqual(cmndOut, s(cmndOut_expected))
       self.assertEqual(errOut, 1)
+
+    finally:
+      os.chdir(testBaseDir)
+
+
+  def test_dist_default_branch(self):
+    os.chdir(testBaseDir)
+    try:
+
+      # Create a mock git meta-project
+
+      testDir = createAndMoveIntoTestDir("gitdist_default_branch")
+      os.mkdir("ExtraRepo1")
+      os.makedirs("Path/To/ExtraRepo2")
+      os.mkdir("ExtraRepo3")
+
+      # Make sure .gitdist.default is found and read correctly
+      open(".gitdist.default", "w").write(
+        ". master\n" \
+        "ExtraRepo1 develop\n" \
+        "Path/To/ExtraRepo2 app-devel\n" \
+        "MissingExtraRepo\n" \
+        "ExtraRepo3\n"
+        )
+      cmndOut = GeneralScriptSupport.getCmndOutput(
+        gitdistPathMock+" checkout _DEFAULT_BRANCH_", workingDir=testDir)
+      cmndOut_expected = \
+        "\n*** Base Git Repo: MockProjectDir\n" \
+        "['mockgit', 'checkout', 'master']\n\n" \
+        "*** Git Repo: ExtraRepo1\n" \
+        "['mockgit', 'checkout', 'develop']\n\n" \
+        "*** Git Repo: Path/To/ExtraRepo2\n" \
+        "['mockgit', 'checkout', 'app-devel']\n\n" \
+        "*** Git Repo: ExtraRepo3\n" \
+        "['mockgit', 'checkout', 'master']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+      # NOTE: Above ensures that all of the paths are read correctly and that
+      # missing paths (MissingExtraRepo) are ignored.
+
+      # Make sure that .gitdist overrides .gitdist.default
+      open(".gitdist", "w").write(
+        ". develop\n" \
+        "ExtraRepo1 develop\n" \
+        "ExtraRepo3 develop\n"
+        )
+      cmndOut = GeneralScriptSupport.getCmndOutput(
+        gitdistPathMock+" checkout _DEFAULT_BRANCH_", workingDir=testDir)
+      cmndOut_expected = \
+        "\n*** Base Git Repo: MockProjectDir\n" \
+        "['mockgit', 'checkout', 'develop']\n\n" \
+        "*** Git Repo: ExtraRepo1\n" \
+        "['mockgit', 'checkout', 'develop']\n\n" \
+        "*** Git Repo: ExtraRepo3\n" \
+        "['mockgit', 'checkout', 'develop']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      # Make sure that --dist-repos overrides all files
+      cmndOut = GeneralScriptSupport.getCmndOutput(
+        gitdistPathMock+" --dist-repos=.,ExtraRepo1,Path/To/ExtraRepo2 "+ \
+        "checkout _DEFAULT_BRANCH_",
+        workingDir=testDir)
+      cmndOut_expected = \
+        "\n*** Base Git Repo: MockProjectDir\n" \
+        "['mockgit', 'checkout', 'master']\n\n" \
+        "*** Git Repo: ExtraRepo1\n" \
+        "['mockgit', 'checkout', 'master']\n\n" \
+        "*** Git Repo: Path/To/ExtraRepo2\n" \
+        "['mockgit', 'checkout', 'master']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+      
+    finally:
+      os.chdir(testBaseDir)
+
+
+  def test_gitdist_move_to_base_dir_invalid_env_var(self):
+    os.environ["GITDIST_MOVE_TO_BASE_DIR"] = "INVALID"
+    cmndOut = getCmndOutput(gitdistPath+" status")
+    cmndOut_expected = "Error, env var GITDIST_MOVE_TO_BASE_DIR='INVALID' is invalid!  Valid choices include empty '', IMMEDIATE_BASE, and EXTREME_BASE.\n"
+    print("cmndOut = ", cmndOut)
+    print("cmndOut_expected = ", cmndOut_expected)
+    self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+
+  def test_gitdist_move_to_base_dir(self):
+    os.chdir(testBaseDir)
+    try:
+
+      # Create a mock git meta-project.
+      testDir = createAndMoveIntoTestDir("gitdist_move_to_base_dir")
+      os.makedirs("ExtraRepo/path/to/somewhere")
+      open(".gitdist", "w").write(
+        ".\n" \
+        "ExtraRepo\n"
+        )
+      open("ExtraRepo/.gitdist", "w").write(
+        ".\n"
+        )
+      os.chdir("ExtraRepo/path/to/somewhere")
+
+      # Test with the default setting.
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = ""
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: somewhere\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      # Test moving up the directory tree until we find a .gitdist file.
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = "IMMEDIATE_BASE"
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: ExtraRepo\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      # Test moving up the directory tree until we find the outer-most .gitdist
+      # file.
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = "EXTREME_BASE"
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: MockProjectDir\n" \
+        "['mockgit', 'status']\n\n" \
+        "*** Git Repo: ExtraRepo\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+      
+      # Rename the .gitdist files .gitdist.default, and try the tests again.
+      os.rename("../../../.gitdist", "../../../.gitdist.default")
+      os.rename("../../../../.gitdist", "../../../../.gitdist.default")
+
+      # Test with the default setting.
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = ""
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: somewhere\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      # Test moving up the directory tree until we find a .gitdist file.
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = "IMMEDIATE_BASE"
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: ExtraRepo\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      # Test moving up the directory tree until we find the outer-most .gitdist
+      # file.
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = "EXTREME_BASE"
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: MockProjectDir\n" \
+        "['mockgit', 'status']\n\n" \
+        "*** Git Repo: ExtraRepo\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+      
+    finally:
+      os.chdir(testBaseDir)
+
+
+  def test_gitdist_move_to_base_dir_no_dist_gitdist_file(self):
+    os.chdir(testBaseDir)
+    try:
+
+      # Create a mock git meta-project but with no .gitdist[.default] files!
+      testDir = createAndMoveIntoTestDir("gitdist_move_to_base_dir_no_dist_gitdist_file")
+      os.makedirs(".git")
+      os.makedirs("ExtraRepo/.git")
+      os.makedirs("ExtraRepo/path/to/somewhere")
+      os.chdir("ExtraRepo/path/to/somewhere")
+
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = ""
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: somewhere\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = "IMMEDIATE_BASE"
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: somewhere\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
+
+      os.environ["GITDIST_MOVE_TO_BASE_DIR"] = "EXTREME_BASE"
+      cmndOut = GeneralScriptSupport.getCmndOutput(gitdistPathMock+" status")
+      cmndOut_expected = \
+        "\n*** Base Git Repo: somewhere\n" \
+        "['mockgit', 'status']\n\n"
+      self.assertEqual(s(cmndOut), s(cmndOut_expected))
 
     finally:
       os.chdir(testBaseDir)

@@ -184,6 +184,27 @@ class test_mockprogram(unittest.TestCase):
       os.chdir(testBaseDir)
 
 
+  def test_call_1_MOCKPROGRAM_INOUT_FILE_OVERRIDE(self):
+    testDir = createAndMoveIntoTestDir("call_1")
+    try:
+      os.mkdir("subdir")
+      open('subdir/mockprogram_inout.txt', 'w').write(
+        "MOCK_PROGRAM_INPUT: some input\n" \
+        "MOCK_PROGRAM_RETURN: 11\n" \
+        "MOCK_PROGRAM_OUTPUT: some output\n" \
+        )
+      (output, errorCode) = GeneralScriptSupport.runSysCmndInterface(
+        mockProgramPath+" some input", rtnOutput=True,
+        extraEnv={"MOCKPROGRAM_INOUT_FILE_OVERRIDE":"subdir/mockprogram_inout.txt"} )
+      expected_output = b"some output\n"
+      self.assertEqual(output, expected_output)
+      self.assertEqual(errorCode, 11)
+      remainingMockFileStr = open("subdir/mockprogram_inout.txt", 'r').read()
+      self.assertEqual(remainingMockFileStr, "")
+    finally:
+      os.chdir(testBaseDir)
+
+
   def test_call_1_multiline_out(self):
     testDir = createAndMoveIntoTestDir("call_1_multiline_out")
     try:
@@ -227,6 +248,36 @@ class test_mockprogram(unittest.TestCase):
       self.assertEqual(output, expected_output)
       self.assertEqual(errorCode, 15)
       remainingMockFileStr = open('.mockprogram_inout.txt', 'r').read()
+      self.assertEqual(remainingMockFileStr, "")
+    finally:
+      os.chdir(testBaseDir)
+
+
+  def test_call_2_MOCKPROGRAM_INOUT_FILE_OVERRIDE(self):
+    testDir = createAndMoveIntoTestDir("call_2")
+    try:
+      os.mkdir("subdir")
+      open('subdir/mockprogram_inout.txt', 'w').write(
+        "MOCK_PROGRAM_INPUT: some input 1\n" \
+        "MOCK_PROGRAM_RETURN: 13\n" \
+        "MOCK_PROGRAM_OUTPUT: some output 1\n" \
+        "MOCK_PROGRAM_INPUT: some input 2\n" \
+        "MOCK_PROGRAM_RETURN: 15\n" \
+        "MOCK_PROGRAM_OUTPUT: some output 2\n" \
+        )
+      (output, errorCode) = GeneralScriptSupport.runSysCmndInterface(
+        mockProgramPath+" some input 1", rtnOutput=True,
+        extraEnv={"MOCKPROGRAM_INOUT_FILE_OVERRIDE":"subdir/mockprogram_inout.txt"} )
+      expected_output = b"some output 1\n"
+      self.assertEqual(output, expected_output)
+      self.assertEqual(errorCode, 13)
+      (output, errorCode) = GeneralScriptSupport.runSysCmndInterface(
+        mockProgramPath+" some input 2", rtnOutput=True,
+        extraEnv={"MOCKPROGRAM_INOUT_FILE_OVERRIDE":"subdir/mockprogram_inout.txt"} )
+      expected_output = b"some output 2\n"
+      self.assertEqual(output, expected_output)
+      self.assertEqual(errorCode, 15)
+      remainingMockFileStr = open('subdir/mockprogram_inout.txt', 'r').read()
       self.assertEqual(remainingMockFileStr, "")
     finally:
       os.chdir(testBaseDir)

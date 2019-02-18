@@ -1,6 +1,6 @@
 #!/bin/bash
  
-# Used to test TriBITS on crf450 using the VERA Dev Env with CMake 3.6.2.
+# Used to test TriBITS on crf450 using the VERA Dev Env with CMake 3.11.1.
 #
 # You can link this script into any location and it will work out of the box.
 #
@@ -16,7 +16,7 @@ TRIBITS_BASE_DIR_ABS=$(readlink -f $TRIBITS_BASE_DIR)
 
 # Load the env:
 source /home/vera_env/gcc-4.8.3/load_dev_env.sh
-export PATH=/home/vera_env/common_tools/cmake-3.6.2/bin:$PATH
+export PATH=/home/vera_env/common_tools/cmake-3.11.1/bin:$PATH
 
 # Create extra builds run by this script
 
@@ -25,7 +25,9 @@ echo "
 -DCMAKE_BUILD_TYPE:STRING=DEBUG
 -DTriBITS_ENABLE_DEBUG:BOOL=ON
 -DTriBITS_ENABLE_Fortran:BOOL=ON
-" > MPI_DEBUG_CMAKE-3.6.2.config
+-DTriBITS_CTEST_DRIVER_COVERAGE_TESTS=TRUE
+-DTriBITS_CTEST_DRIVER_MEMORY_TESTS=TRUE
+" > MPI_DEBUG.config
 
 echo "
 -DTPL_ENABLE_MPI:BOOL=OFF
@@ -34,14 +36,14 @@ echo "
 -DCMAKE_C_COMPILER=gcc
 -DCMAKE_CXX_COMPILER=g++
 -DCMAKE_Fortran_COMPILER=gfortran
-" > SERIAL_RELEASE_CMAKE-3.6.2.config
+-DTriBITS_CTEST_DRIVER_COVERAGE_TESTS=TRUE
+-DTriBITS_CTEST_DRIVER_MEMORY_TESTS=TRUE
+" > SERIAL_RELEASE.config
 
 # Run checkin-test.py
 
 $TRIBITS_BASE_DIR_ABS/checkin-test.py \
 --extra-cmake-options="-DPYTHON_EXECUTABLE=/usr/bin/python2.6" \
---default-builds= \
---st-extra-builds=MPI_DEBUG_CMAKE-3.6.2,SERIAL_RELEASE_CMAKE-3.6.2 \
 --ctest-timeout=180 \
 --skip-case-no-email \
 "$@"

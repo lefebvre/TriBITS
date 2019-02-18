@@ -120,6 +120,7 @@ FUNCTION(CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE TEST_NAME)
         CTEST_ENABLE_MODIFIED_PACKAGES_ONLY=OFF # Set back to default
         ${MOCK_PROJECT_NAME}_PRE_REPOSITORIES= # Set back to default
         ${MOCK_PROJECT_NAME}_EXTRA_REPOSITORIES= # Set back to default
+        CTEST_TEST_TYPE= # Set back to default
         CTEST_DO_UPDATES=ON # Set back to default
         CTEST_DASHBOARD_ROOT=  # Must be empty
         CTEST_DO_SUBMIT=OFF # Must be off
@@ -193,7 +194,7 @@ CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE(
   ARGS Trilinos_PACKAGES=RTOp Trilinos_EXCLUDE_PACKAGES=Teuchos
   PASS_REGULAR_EXPRESSION_ALL
     "Explicitly enabled packages on input .by user.:  RTOp 1"
-    "WARNING: Setting Trilinos_ENABLE_RTOp=OFF which was 'ON' because RTOp has a required library dependence on disabled package Teuchos but Trilinos_DISABLE_ENABLED_FORWARD_DEP_PACKAGES=ON!"
+    "NOTE: Setting Trilinos_ENABLE_RTOp=OFF which was 'ON' because RTOp has a required library dependence on disabled package Teuchos but Trilinos_DISABLE_ENABLED_FORWARD_DEP_PACKAGES=ON!"
     "Final set of enabled packages:  0"
     "Trilinos_NUM_ENABLED_PACKAGES=0:  Exiting the script!"
   )
@@ -222,7 +223,7 @@ CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE(
   PASS_REGULAR_EXPRESSION_ALL
     "Explicitly enabled packages on input .by user.:  Teuchos 1"
     "Explicitly disabled TPLs on input .by user or by default.:  BLAS 1"
-    "WARNING: Setting Trilinos_ENABLE_Teuchos=OFF which was 'ON' because Teuchos has a required library dependence on disabled TPL BLAS but Trilinos_DISABLE_ENABLED_FORWARD_DEP_PACKAGES=ON!"
+    "NOTE: Setting Trilinos_ENABLE_Teuchos=OFF which was 'ON' because Teuchos has a required library dependence on disabled TPL BLAS but Trilinos_DISABLE_ENABLED_FORWARD_DEP_PACKAGES=ON!"
     "Final set of enabled packages:  0"
     "Trilinos_NUM_ENABLED_PACKAGES=0:  Exiting the script!"
   )
@@ -244,6 +245,30 @@ CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE(
   )
 # NOTE: The above test pins down the form of the configure options passed to
 # different package configures to make sure everything in there.
+
+
+CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE(
+  EnableThyra_EnableAllForwardDepPackages
+  ARGS Trilinos_PACKAGES=Thyra Trilinos_ENABLE_ALL_FORWARD_DEP_PACKAGES=TRUE
+    Trilinos_ENABLE_KNOWN_EXTERNAL_REPOS_TYPE=Experimental
+    CTEST_EXPLICITLY_ENABLE_IMPLICITLY_ENABLED_PACKAGES=FALSE
+  PASS_REGULAR_EXPRESSION_ALL
+    "-- ENV_Trilinos_ENABLE_ALL_FORWARD_DEP_PACKAGES='TRUE'"
+    "-- Trilinos_ENABLE_ALL_FORWARD_DEP_PACKAGES='TRUE'"
+    "Explicitly enabled SE packages on input [(]by user[)]:  Thyra 1"
+    "Sweep forward enabling all forward library dependent packages because Trilinos_ENABLE_ALL_FORWARD_DEP_PACKAGES=ON"
+    "-- Setting Trilinos_ENABLE_Stratimikos=ON because Trilinos_ENABLE_ThyraCoreLibs=ON"
+    "Final set of enabled packages:  Teuchos RTOp Epetra Zoltan Triutils Tpetra EpetraExt Thyra Isorropia AztecOO Galeri Amesos Ifpack ML Stratimikos 15"
+    "Final set of enabled SE packages:  Teuchos RTOp Epetra Zoltan Triutils Tpetra EpetraExt ThyraCoreLibs ThyraEpetra ThyraEpetraExt ThyraTpetra Thyra Isorropia AztecOO Galeri Amesos Ifpack ML Stratimikos 19"
+    "Final set of packages to be explicitly processed by CTest/CDash:  Thyra Stratimikos 2"
+    "Processing current package Thyra: libs='ON', tests='ON'"
+    "CONFIGURE_OPTIONS = '.*-DTrilinos_ENABLE_Thyra:BOOL=ON'"
+    "Processing current package Stratimikos: libs='ON', tests='ON'"
+    "CONFIGURE_OPTIONS = '.*-DTrilinos_ENABLE_Stratimikos:BOOL=ON'"
+  )
+# NOTE: The above test makes sure that
+# Trilinos_ENABLE_ALL_FORWARD_DEP_PACKAGES is read from the env and has the
+# intended impact.
 
 
 CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE(
@@ -326,7 +351,7 @@ CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE(
     "Explicitly enabled packages on input .*  0"
     "Explicitly disabled packages on input .*  Stokhos Stalix 2"
     "Enabling all SE packages that are not currently disabled because of Trilinos_ENABLE_ALL_PACKAGES=ON"
-    "WARNING: Not Setting Trilinos_ENABLE_Belos=ON even though Stratimikos has an optional dependence on Belos because Trilinos_ENABLE_SECONDARY_TESTED_CODE=OFF"
+    "NOTE: Not Setting Trilinos_ENABLE_Belos=ON even though Stratimikos has an optional dependence on Belos because Trilinos_ENABLE_SECONDARY_TESTED_CODE=OFF"
     "Final set of enabled packages:  TrilinosFramework Teuchos RTOp Epetra Zoltan Shards Triutils Tpetra EpetraExt Thyra Isorropia AztecOO Galeri Amesos Intrepid Ifpack ML Stratimikos RBGen 19"
     "Final set of packages to be explicitly processed by CTest/CDash:  TrilinosFramework Teuchos RTOp Epetra Zoltan Shards Triutils Tpetra EpetraExt Thyra Isorropia AztecOO Galeri Amesos Intrepid Ifpack ML Stratimikos RBGen 19"
     "Final set of non-enabled packages:  Stokhos Sacado Belos Phalanx Panzer Teko Stalix 7"
@@ -828,6 +853,35 @@ IF (PYTHON_EXECUTABLE)
   # a configure failure in a previous all-at-once CI build.  This test makes
   # sure that all packages will get enabled in the follow-up CI iteration in
   # that case.
+
+
+  CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE(
+    CI_AAO_EnableAllPackages_ExcludePackges
+    ARGS
+      Trilinos_ENABLE_SECONDARY_TESTED_CODE=ON
+      Trilinos_EXCLUDE_PACKAGES=RBGen,Panzer
+      Trilinos_CTEST_DO_ALL_AT_ONCE=TRUE
+      CTEST_TEST_TYPE=Nightly
+    PASS_REGULAR_EXPRESSION_ALL
+      "Trilinos_EXCLUDE_PACKAGES='RBGen,Panzer'"
+      "Disabling excluded package RBGen [.][.][.]"
+      "Disabling excluded package Panzer [.][.][.]"
+      "Explicitly disabled packages on input .by user or by default.:  Stokhos RBGen Panzer Stalix 4"
+      "Enabling all SE packages that are not currently disabled because of Trilinos_ENABLE_ALL_PACKAGES=ON .Trilinos_ENABLE_SECONDARY_TESTED_CODE=ON."
+      "Final set of non-enabled packages:  Stokhos RBGen Panzer Stalix 4"
+      "Final set of non-enabled SE packages:  Stokhos ThyraCrazyStuff RBGen Panzer Stalix 5"
+      "Configure, build, test, and submit results for Trilinos packages"
+      "CONFIGURE_OPTIONS = '.+[;]-DTrilinos_ENABLE_ALL_PACKAGES=ON[;]-DTrilinos_ENABLE_RBGen=OFF[;]-DTrilinos_ENABLE_Panzer=OFF[;]-DTrilinos_ENABLE_TESTS:BOOL=ON'"
+      "Skipping actual ctest_configure.. because CTEST_DEPENDENCY_HANDLING_UNIT_TESTING='ON'"
+      "Skipping build because CTEST_DEPENDENCY_HANDLING_UNIT_TESTING='ON'"
+      "Skipping testing because CTEST_DEPENDENCY_HANDLING_UNIT_TESTING='ON'"
+      "Done with the all-at-once configure, build, test, ans submit of Trilinos packages"
+      "TRIBITS_CTEST_DRIVER: OVERALL: ALL PASSSED"
+    )
+  # NOTE: The above test is for the all-at-once appraoch where
+  # <Project>_ENABLE_ALL_PACKAGES=ON is set (implicitly) but some packages are
+  # disabled through setting <Project>_EXCLUDE_PACKAGES.  This makes sure that
+  # these disables are passed into the inner configure.
 
 
   CREATE_CTEST_DEPENDENCY_HANDLING_TEST_CASE(
