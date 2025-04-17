@@ -1,56 +1,26 @@
 # @HEADER
-# ************************************************************************
-#
+# *****************************************************************************
 #            TriBITS: Tribal Build, Integrate, and Test System
-#                    Copyright 2013 Sandia Corporation
 #
-# Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-# the U.S. Government retains certain rights in this software.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-# 1. Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright
-# notice, this list of conditions and the following disclaimer in the
-# documentation and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the Corporation nor the names of the
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# ************************************************************************
+# Copyright 2013-2016 NTESS and the TriBITS contributors.
+# SPDX-License-Identifier: BSD-3-Clause
+# *****************************************************************************
 # @HEADER
 
-INCLUDE(GetCurrentListDir)
-INCLUDE(CMakeParseArguments)
-INCLUDE(SetDefaultAndFromEnv)
+include(GetCurrentListDir)
+include(CMakeParseArguments)
+include(SetDefaultAndFromEnv)
 
 # Set if the inner CMake installs are performed or not
-SET_DEFAULT_AND_FROM_ENV(TDD_FORCE_INNER_CMAKE_INSTALL 1)
+set_default_and_from_env(TDD_FORCE_INNER_CMAKE_INSTALL 1)
 
 # Set if the inner CMake installs are performed or not
-SET_DEFAULT_AND_FROM_ENV(TRIBITS_TDD_USE_SYSTEM_CTEST 0)
+set_default_and_from_env(TRIBITS_TDD_USE_SYSTEM_CTEST 0)
 
 # Get this value outside of any functions so it will be the path to
 # *this* file and not the path to the file calling any of these
 # functions.
-GET_CURRENT_LIST_DIR(THIS_SCRIPT_DIR)
+get_current_list_dir(THIS_SCRIPT_DIR)
 
 #
 # Placeholder for any global setup necessary on all machines...
@@ -58,7 +28,7 @@ GET_CURRENT_LIST_DIR(THIS_SCRIPT_DIR)
 # Call this function first at the top of any drivers/MACHINE/CMakeLists.txt
 # file.
 #
-function(TRIBITS_DRIVER_SETUP)
+function(tribits_driver_setup)
   #
   # But right now... no global setup required...
   #
@@ -75,7 +45,7 @@ endfunction()
 # TRIBITS_DRIVER_ADD_DASHBOARD have collected a list of which flavors
 # of CMake are required to run all the dashboards on this machine.
 #
-function(TRIBITS_DRIVER_ADD_TEST_THAT_INSTALLS_CMAKE cmake_type)
+function(tribits_driver_add_test_that_installs_cmake cmake_type)
 
   set(known 0)
   if("${cmake_type}" STREQUAL "min" OR
@@ -99,12 +69,12 @@ function(TRIBITS_DRIVER_ADD_TEST_THAT_INSTALLS_CMAKE cmake_type)
 
   find_program(PYTHON_EXE python)
 
-  SET_DEFAULT_AND_FROM_ENV( TDD_HTTP_PROXY "" )
-  IF (TDD_HTTP_PROXY)
-    SET(TDD_HTTP_PROXY_ARG "--http-proxy=${TDD_HTTP_PROXY}")
-  ELSE()
-    SET(TDD_HTTP_PROXY_ARG "")
-  ENDIF()
+  set_default_and_from_env( TDD_HTTP_PROXY "" )
+  if (TDD_HTTP_PROXY)
+    set(TDD_HTTP_PROXY_ARG "--http-proxy=${TDD_HTTP_PROXY}")
+  else()
+    set(TDD_HTTP_PROXY_ARG "")
+  endif()
 
   add_test(uninstall-cmake-${cmake_type} ${CMAKE_COMMAND}
     -E remove_directory "${TD_BASE_DIR}/tools/cmake-${cmake_type}"
@@ -141,11 +111,11 @@ endfunction()
 #  [RUN_SERIAL]
 #  [TIMEOUT_MINUTES 180]
 #
-function(TRIBITS_DRIVER_ADD_DASHBOARD testname scriptname)
+function(tribits_driver_add_dashboard testname scriptname)
 
-  MESSAGE("TRIBITS_DRIVER_ADD_DASHBOARD:  '${testname}'  '${scriptname}' [${ARGN}]")
+  message("TRIBITS_DRIVER_ADD_DASHBOARD:  '${testname}'  '${scriptname}' [${ARGN}]")
 
-  CMAKE_PARSE_ARGUMENTS(
+  cmake_parse_arguments(
     # prefix
     PARSE
     # options
@@ -231,21 +201,21 @@ endfunction()
 # flavors of ctest required to drive the other tests added with
 # TRIBITS_DRIVER_ADD_DASHBOARD.
 #
-function(TRIBITS_ADD_REQUIRED_CMAKE_INSTALLS)
+function(tribits_add_required_cmake_installs)
 
-  IF (TRIBITS_TDD_USE_SYSTEM_CTEST STREQUAL "1")
+  if (TRIBITS_TDD_USE_SYSTEM_CTEST STREQUAL "1")
 
-    MESSAGE(STATUS "Skipping CMake install tests because TRIBITS_TDD_USE_SYSTEM_CTEST==1")
+    message(STATUS "Skipping CMake install tests because TRIBITS_TDD_USE_SYSTEM_CTEST==1")
 
-  ELSEIF (TDD_FORCE_INNER_CMAKE_INSTALL STREQUAL "1")
+  elseif (TDD_FORCE_INNER_CMAKE_INSTALL STREQUAL "1")
 
     get_property(types GLOBAL PROPERTY TD_CMAKE_INSTALLER_TYPES)
 
     if (types)
       list(REMOVE_DUPLICATES types)
       foreach (type ${types})
-        MESSAGE(STATUS "Adding CMake install test ${type}")
-        TRIBITS_DRIVER_ADD_TEST_THAT_INSTALLS_CMAKE(${type})
+        message(STATUS "Adding CMake install test ${type}")
+        tribits_driver_add_test_that_installs_cmake(${type})
       endforeach()
     else()
       message("warning: no cmake install tests are necessary...")
@@ -253,10 +223,10 @@ function(TRIBITS_ADD_REQUIRED_CMAKE_INSTALLS)
       message("  *before* calls to TRIBITS_ADD_REQUIRED_CMAKE_INSTALLS...")
     endif()
 
-  ELSE()
+  else()
 
-    MESSAGE(STATUS "Skipping CMake install tests because TDD_FORCE_INNER_CMAKE_INSTALL!=1")
+    message(STATUS "Skipping CMake install tests because TDD_FORCE_INNER_CMAKE_INSTALL!=1")
 
-  ENDIF()
+  endif()
 
 endfunction()

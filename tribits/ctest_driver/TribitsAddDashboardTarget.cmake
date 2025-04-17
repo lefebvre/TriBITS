@@ -1,164 +1,158 @@
 # @HEADER
-# ************************************************************************
-#
+# *****************************************************************************
 #            TriBITS: Tribal Build, Integrate, and Test System
-#                    Copyright 2013 Sandia Corporation
 #
-# Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-# the U.S. Government retains certain rights in this software.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-# 1. Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright
-# notice, this list of conditions and the following disclaimer in the
-# documentation and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the Corporation nor the names of the
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# ************************************************************************
+# Copyright 2013-2016 NTESS and the TriBITS contributors.
+# SPDX-License-Identifier: BSD-3-Clause
+# *****************************************************************************
 # @HEADER
 
 
+################################################################################
 #
 # This file gets included in the main TriBITS framework.  It is put here to
 # reduce the size of the tribits/core/ directory.
 #
+################################################################################
 
+include("${CMAKE_CURRENT_LIST_DIR}/../core/utils/TribitsGitRepoVersionInfo.cmake")
 
 #
 # Macro that drives a experimental 'dashboard' target
 #
 
-MACRO(TRIBITS_ADD_DASHBOARD_TARGET)
+macro(tribits_add_dashboard_target)
 
-  IF (NOT (WIN32 AND NOT CYGWIN))
+  if (NOT (WIN32 AND NOT CYGWIN))
 
-    ADVANCED_SET(${PROJECT_NAME}_DASHBOARD_CTEST_ARGS "-V" CACHE STRING
+    if ("${${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE_DEFAULT}" STREQUAL "")
+      set(${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE_DEFAULT FALSE)
+    endif()
+    advanced_set(${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE
+      ${${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE_DEFAULT}
+      CACHE BOOL
+      "If set to TRUE, use all-at-once mode for configure, build, test, and submit.  Otherwise, use package-by-package mode.")
+
+    advanced_set(${PROJECT_NAME}_DASHBOARD_CTEST_ARGS "-V" CACHE STRING
       "Extra arguments to pass to CTest when calling 'ctest -S' to run the 'dashboard' make target." )
 
-    ADVANCED_SET(CTEST_BUILD_FLAGS "" CACHE STRING
+    advanced_set(CTEST_BUILD_FLAGS "" CACHE STRING
       "Sets CTEST_BUILD_FLAGS on the env before invoking 'ctest -S'." )
 
-    ADVANCED_SET(CTEST_PARALLEL_LEVEL "" CACHE STRING
+    advanced_set(CTEST_PARALLEL_LEVEL "" CACHE STRING
       "Sets CTEST_PARALLEL_LEVEL on the env before invoking 'ctest -S'." )
 
     # H.1) Enable all packages that are enabled and have tests enabled
 
-    SET(${PROJECT_NAME}_ENABLED_PACKAGES_LIST)
-    SET(${PROJECT_NAME}_ENABLED_PACKAGES_CMAKE_ARG_LIST)
-    FOREACH(TRIBITS_PACKAGE ${${PROJECT_NAME}_ENABLED_SE_PACKAGES})
-      IF (${PROJECT_NAME}_ENABLE_${TRIBITS_PACKAGE} AND ${TRIBITS_PACKAGE}_ENABLE_TESTS)
-        IF (${PROJECT_NAME}_ENABLED_PACKAGES_LIST)
-          SET(${PROJECT_NAME}_ENABLED_PACKAGES_LIST
+    set(${PROJECT_NAME}_ENABLED_PACKAGES_LIST)
+    set(${PROJECT_NAME}_ENABLED_PACKAGES_CMAKE_ARG_LIST)
+    foreach(TRIBITS_PACKAGE ${${PROJECT_NAME}_ENABLED_INTERNAL_PACKAGES})
+      if (${PROJECT_NAME}_ENABLE_${TRIBITS_PACKAGE} AND ${TRIBITS_PACKAGE}_ENABLE_TESTS)
+        if (${PROJECT_NAME}_ENABLED_PACKAGES_LIST)
+          set(${PROJECT_NAME}_ENABLED_PACKAGES_LIST
             "${${PROJECT_NAME}_ENABLED_PACKAGES_LIST}\;${TRIBITS_PACKAGE}")
-        ELSE()
-          SET(${PROJECT_NAME}_ENABLED_PACKAGES_LIST "${TRIBITS_PACKAGE}")
-        ENDIF()
-        SET(${PROJECT_NAME}_ENABLED_PACKAGES_CMAKE_ARG_LIST
+        else()
+          set(${PROJECT_NAME}_ENABLED_PACKAGES_LIST "${TRIBITS_PACKAGE}")
+        endif()
+        set(${PROJECT_NAME}_ENABLED_PACKAGES_CMAKE_ARG_LIST
           ${${PROJECT_NAME}_ENABLED_PACKAGES_CMAKE_ARG_LIST} -D${PROJECT_NAME}_ENABLE_${TRIBITS_PACKAGE}=ON)
-      ENDIF()
-    ENDFOREACH()
-    #PRINT_VAR(${PROJECT_NAME}_ENABLED_PACKAGES_LIST)
+      endif()
+    endforeach()
+    #print_var(${PROJECT_NAME}_ENABLED_PACKAGES_LIST)
 
-    SET(EXPR_CMND_ARGS)
+    set(EXPR_CMND_ARGS)
 
     # Hard override options used by basic build and tests
-    APPEND_SET(EXPR_CMND_ARGS "TRIBITS_PROJECT_ROOT=${${PROJECT_NAME}_SOURCE_DIR}")
-    APPEND_SET(EXPR_CMND_ARGS "${PROJECT_NAME}_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}")
-    APPEND_SET(EXPR_CMND_ARGS "${PROJECT_NAME}_WARNINGS_AS_ERRORS_FLAGS='${${PROJECT_NAME}_WARNINGS_AS_ERRORS_FLAGS}'")
-    APPEND_SET(EXPR_CMND_ARGS "${PROJECT_NAME}_ENABLE_SECONDARY_TESTED_CODE='${${PROJECT_NAME}_ENABLE_SECONDARY_TESTED_CODE}'")
+    append_set(EXPR_CMND_ARGS "TRIBITS_PROJECT_ROOT=${${PROJECT_NAME}_SOURCE_DIR}")
+    append_set(EXPR_CMND_ARGS "${PROJECT_NAME}_TRIBITS_DIR=${${PROJECT_NAME}_TRIBITS_DIR}")
+    append_set(EXPR_CMND_ARGS "${PROJECT_NAME}_WARNINGS_AS_ERRORS_FLAGS='${${PROJECT_NAME}_WARNINGS_AS_ERRORS_FLAGS}'")
+    append_set(EXPR_CMND_ARGS "${PROJECT_NAME}_ENABLE_SECONDARY_TESTED_CODE=${${PROJECT_NAME}_ENABLE_SECONDARY_TESTED_CODE}")
 
-    # Conditionally override options used only for testing.  These options
-    # have no use in a a basic build/test so we don't want to interfere with
-    # options users might set on the env.
-    IF (NOT "${${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE}" STREQUAL "")
-      APPEND_SET(EXPR_CMND_ARGS "${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE=${${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE}")
-    ENDIF()
-    IF (NOT "${${PROJECT_NAME}_CTEST_USE_NEW_AAO_FEATURES}" STREQUAL "")
-      APPEND_SET(EXPR_CMND_ARGS "${PROJECT_NAME}_CTEST_USE_NEW_AAO_FEATURES=${${PROJECT_NAME}_CTEST_USE_NEW_AAO_FEATURES}")
-    ENDIF()
-    IF (${PROJECT_NAME}_ENABLE_COVERAGE_TESTING)
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_DO_COVERAGE_TESTING=TRUE")
-    ENDIF()
-    IF (CTEST_BUILD_FLAGS)
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_BUILD_FLAGS='${CTEST_BUILD_FLAGS}'")
-    ENDIF()
-    IF (CTEST_PARALLEL_LEVEL)
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL}")
-    ENDIF()
-    IF (NOT "${CTEST_DO_SUBMIT}" STREQUAL "")
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_DO_SUBMIT=${CTEST_DO_SUBMIT}")
-    ENDIF()
-    IF (CTEST_DROP_METHOD)
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_DROP_METHOD=${CTEST_DROP_METHOD}")
-    ENDIF()
-    IF (CTEST_DROP_SITE)
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_DROP_SITE=${CTEST_DROP_SITE}")
-    ENDIF()
-    IF (CTEST_DROP_LOCATION)
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_DROP_LOCATION=${CTEST_DROP_LOCATION}")
-    ENDIF()
-    IF (CTEST_DROP_SITE_COVERAGE)
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_DROP_SITE_COVERAGE=${CTEST_DROP_SITE_COVERAGE}")
-    ENDIF()
-    IF (CTEST_DROP_LOCATION_COVERAGE)
-      APPEND_SET(EXPR_CMND_ARGS "CTEST_DROP_LOCATION_COVERAGE=${CTEST_DROP_LOCATION_COVERAGE}")
-    ENDIF()
+    # Determine if base repo is a git repo (by seeing if SHA1 can be extracted)
+    tribits_git_repo_sha1("${PROJECT_SOURCE_DIR}" projectGitRepoSha1
+      FAILURE_MESSAGE_OUT  projectGitRepoSha1FailureMsg)
+    if (projectGitRepoSha1 STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_DO_UPDATES=OFF")
+    endif()
 
-    #PRINT_VAR(${PROJECT_NAME}_EXTRA_REPOSITORIES)
-    APPEND_SET(EXPR_CMND_ARGS
+    # Conditionally override options used only for the 'dashboard' target.
+    # These options have no use in a a basic build/test so we don't want to
+    # interfere with options users might set on the env.
+    if (NOT "${${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE=${${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE}")
+    endif()
+    if (NOT "${CTEST_BUILD_NAME}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_BUILD_NAME=${CTEST_BUILD_NAME}")
+    endif()
+    if (NOT "${${PROJECT_NAME}_ENABLE_COVERAGE_TESTING}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_DO_COVERAGE_TESTING=${${PROJECT_NAME}_ENABLE_COVERAGE_TESTING}")
+    endif()
+    if (NOT "${CTEST_BUILD_FLAGS}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_BUILD_FLAGS=${CTEST_BUILD_FLAGS}")
+    endif()
+    if (NOT "${CTEST_PARALLEL_LEVEL}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL}")
+    endif()
+    if (NOT "${CTEST_DO_SUBMIT}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_DO_SUBMIT=${CTEST_DO_SUBMIT}")
+    endif()
+    if (NOT "${CTEST_DROP_METHOD}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_DROP_METHOD=${CTEST_DROP_METHOD}")
+    endif()
+    if (NOT $"{CTEST_DROP_SITE}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_DROP_SITE=${CTEST_DROP_SITE}")
+    endif()
+    if (NOT "${CTEST_DROP_LOCATION}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_DROP_LOCATION=${CTEST_DROP_LOCATION}")
+    endif()
+    if (NOT "${CTEST_DROP_SITE_COVERAGE}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_DROP_SITE_COVERAGE=${CTEST_DROP_SITE_COVERAGE}")
+    endif()
+    if (NOT "${CTEST_DROP_LOCATION_COVERAGE}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "CTEST_DROP_LOCATION_COVERAGE=${CTEST_DROP_LOCATION_COVERAGE}")
+    endif()
+    if (NOT "${TRIBITS_2ND_CTEST_DROP_LOCATION}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "TRIBITS_2ND_CTEST_DROP_LOCATION=${TRIBITS_2ND_CTEST_DROP_LOCATION}")
+    endif()
+    if (NOT "${TRIBITS_2ND_CTEST_DROP_SITE}" STREQUAL "")
+      append_set(EXPR_CMND_ARGS "TRIBITS_2ND_CTEST_DROP_SITE=${TRIBITS_2ND_CTEST_DROP_SITE}")
+    endif()
+
+    #print_var(${PROJECT_NAME}_EXTRA_REPOSITORIES)
+    append_set(EXPR_CMND_ARGS
       ${PROJECT_NAME}_EXTRAREPOS_FILE=${${PROJECT_NAME}_EXTRAREPOS_FILE})
-    APPEND_SET(EXPR_CMND_ARGS
+    append_set(EXPR_CMND_ARGS
       ${PROJECT_NAME}_ENABLE_KNOWN_EXTERNAL_REPOS_TYPE=${${PROJECT_NAME}_ENABLE_KNOWN_EXTERNAL_REPOS_TYPE})
-    APPEND_SET(EXPR_CMND_ARGS
+    append_set(EXPR_CMND_ARGS
       ${PROJECT_NAME}_IGNORE_MISSING_EXTRA_REPOSITORIES=${${PROJECT_NAME}_IGNORE_MISSING_EXTRA_REPOSITORIES})
-    JOIN(${PROJECT_NAME}_EXTRA_REPOSITORIES_JOINED "," FALSE
+    join(${PROJECT_NAME}_EXTRA_REPOSITORIES_JOINED "," FALSE
       ${${PROJECT_NAME}_EXTRA_REPOSITORIES})
-    APPEND_SET(EXPR_CMND_ARGS
+    append_set(EXPR_CMND_ARGS
       ${PROJECT_NAME}_EXTRA_REPOSITORIES=${${PROJECT_NAME}_EXTRA_REPOSITORIES_JOINED})
 
-    #PRINT_VAR(EXPR_CMND_ARGS)
+    #print_var(EXPR_CMND_ARGS)
 
     # H.2) Add the custom target to enable all the packages with tests enabled
 
-    IF (${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE)
+    if (${PROJECT_NAME}_CTEST_DO_ALL_AT_ONCE)
 
-      SET(RUNNING_EXP_DASHBOARD_MSG_HEADER
+      set(RUNNING_EXP_DASHBOARD_MSG_HEADER
         "Running all-at-once experimental dashboard"
         )
 
-      SET(DASHBOARD_TARGET_PRE_CTEST_DRIVER_CMNDS)
+      set(DASHBOARD_TARGET_PRE_CTEST_DRIVER_CMNDS)
 
-      SET(DASHBOARD_TARGET_CTEST_DRIVER_CMND_NUM)
+      set(DASHBOARD_TARGET_CTEST_DRIVER_CMND_NUM)
 
-      SET(DASHBOARD_TARGET_POST_CTEST_DRIVER_CMNDS)
+      set(DASHBOARD_TARGET_POST_CTEST_DRIVER_CMNDS)
 
-    ELSE()
+    else()
 
-      SET(RUNNING_EXP_DASHBOARD_MSG_HEADER
+      set(RUNNING_EXP_DASHBOARD_MSG_HEADER
         "Running package-by-package experimental dashboard"
         )
 
-      SET(DASHBOARD_TARGET_PRE_CTEST_DRIVER_CMNDS
+      set(DASHBOARD_TARGET_PRE_CTEST_DRIVER_CMNDS
         COMMAND echo
         COMMAND echo "***"
         COMMAND echo "*** A) Clean out the list of packages"
@@ -172,11 +166,11 @@ MACRO(TRIBITS_ADD_DASHBOARD_TARGET)
         # NOTE: Above, if ${PROJECT_NAME}_ENABLE_ALL_PACKAGES was set in CMakeCache.txt, then setting
         # -D${PROJECT_NAME}_ENABLE_ALL_PACKAGES:BOOL=OFF will turn it off in the cache.  Note that it will
         # never be turned on again which means that the list of packages will be set explicitly below.
-	)
+        )
 
-      SET(DASHBOARD_TARGET_CTEST_DRIVER_CMND_NUM "B) ")
+      set(DASHBOARD_TARGET_CTEST_DRIVER_CMND_NUM "B) ")
 
-      SET(DASHBOARD_TARGET_POST_CTEST_DRIVER_CMNDS
+      set(DASHBOARD_TARGET_POST_CTEST_DRIVER_CMNDS
         COMMAND echo
         COMMAND echo "***"
         COMMAND echo "*** C) Clean out the list of packages again to clean the cache file"
@@ -202,13 +196,15 @@ MACRO(TRIBITS_ADD_DASHBOARD_TARGET)
         COMMAND echo
         COMMAND echo "See the results at http://${CTEST_DROP_SITE}${CTEST_DROP_LOCATION}&display=project\#Experimental"
         COMMAND echo
-	)
+        )
 
-    ENDIF()
+    endif()
 
-    ADD_CUSTOM_TARGET( dashboard
+    add_custom_target( dashboard
 
-      VERBATIM
+      USES_TERMINAL  # Allow real-time STDOUT with ninja target
+
+      VERBATIM  # Recommended
 
       # WARNING: The echoed command and the actual commands are duplicated!  You have to reproduce them!
 
@@ -244,12 +240,8 @@ MACRO(TRIBITS_ADD_DASHBOARD_TARGET)
 
       ${DASHBOARD_TARGET_POST_CTEST_DRIVER_CMNDS}
 
-      COMMAND echo
-      COMMAND echo "See the results at http://${CTEST_DROP_SITE}${CTEST_DROP_LOCATION}&display=project\#Experimental"
-      COMMAND echo
-
       )
 
-  ENDIF()
+  endif()
 
-ENDMACRO()
+endmacro()

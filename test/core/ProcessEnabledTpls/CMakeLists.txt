@@ -39,9 +39,9 @@
 
 
 
-INCLUDE(CMakeParseArguments)
+include(CMakeParseArguments)
 
-SET(MOCK_PROJECT_NAME DummyProj)
+set(MOCK_PROJECT_NAME DummyProj)
 
 
 #####################################################################
@@ -52,9 +52,9 @@ SET(MOCK_PROJECT_NAME DummyProj)
 #####################################################################
 
 
-FUNCTION(CREATE_PROCESS_ENABLED_TPLS_TEST_CASE  TEST_NAME)
+function(create_process_enabled_tpls_test_case  TEST_NAME)
 
-  CMAKE_PARSE_ARGUMENTS(
+  cmake_parse_arguments(
      #prefix
      PARSE
      #options
@@ -68,11 +68,11 @@ FUNCTION(CREATE_PROCESS_ENABLED_TPLS_TEST_CASE  TEST_NAME)
 
    # Do a reconfiugre as TEST_2 if requested through setting the "RC"
    # arguments.
-   IF (PARSE_RC_INCLUDE_DIRS OR PARSE_RC_LIBRARY_DIRS OR
+   if (PARSE_RC_INCLUDE_DIRS OR PARSE_RC_LIBRARY_DIRS OR
      PARSE_RC_PASS_REGULAR_EXPRESSION_ALL OR PARSE_RC_EXTRA_ARGS
      )
 
-     SET(TEST_2_ARGS
+     set(TEST_2_ARGS
        TEST_2 CMND "${CMAKE_COMMAND}"
          ARGS
            -DPROJECT_NAME=${MOCK_PROJECT_NAME}
@@ -88,14 +88,14 @@ FUNCTION(CREATE_PROCESS_ENABLED_TPLS_TEST_CASE  TEST_NAME)
          PASS_REGULAR_EXPRESSION_ALL ${PARSE_RC_PASS_REGULAR_EXPRESSION_ALL}
        )
 
-   ELSE()
+   else()
 
-     SET(TEST_2_ARGS)
+     set(TEST_2_ARGS)
 
-   ENDIF()
+   endif()
 
 
-  TRIBITS_ADD_ADVANCED_TEST( ProcessEnabledTpl_${TEST_NAME}
+  tribits_add_advanced_test( ProcessEnabledTpl_${TEST_NAME}
     OVERALL_WORKING_DIRECTORY TEST_NAME
 
     TEST_0
@@ -125,30 +125,30 @@ FUNCTION(CREATE_PROCESS_ENABLED_TPLS_TEST_CASE  TEST_NAME)
 
     )
 
-ENDFUNCTION()
+endfunction()
 
 #
 # Test with HeadersOnlyTpl
 #
 
 
-SET(HeaderOnlyTpl_BASE_DIR ${${PROJECT_NAME}_TRIBITS_DIR}/examples/tpls/HeaderOnlyTpl)
-SET(HeaderOnlyTpl_FINDMOD
+set(HeaderOnlyTpl_BASE_DIR ${${PROJECT_NAME}_TRIBITS_DIR}/examples/tpls/HeaderOnlyTpl)
+set(HeaderOnlyTpl_FINDMOD
   ${${PROJECT_NAME}_TRIBITS_DIR}/examples/TribitsExampleProject/cmake/tpls/FindTPLHeaderOnlyTpl.cmake)
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeaderOnlyTpl_FindAll
   TPL_NAME  HeaderOnlyTpl
   TPL_FINDMOD  ${HeaderOnlyTpl_FINDMOD}
   INCLUDE_DIRS  ${HeaderOnlyTpl_BASE_DIR}
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
+    "Processing enabled external package/TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
     "-- Must find at least one header in each of the header sets .HeaderOnlyTpl_stuff.hpp."
     "-- Searching for headers in HeaderOnlyTpl_INCLUDE_DIRS='.+/HeaderOnlyTpl'"
     "-- Searching for a header file in the set .HeaderOnlyTpl_stuff.hpp.:"
     "--   Searching for header 'HeaderOnlyTpl_stuff.hpp' ..."
-    "--     Found header '.+/HeaderOnlyTpl/HeaderOnlyTpl_stuff.hpp'"
+    "--     Found header '.+/HeaderOnlyTpl/?/HeaderOnlyTpl_stuff.hpp'"
     "-- Found TPL 'HeaderOnlyTpl' include dirs '.+/HeaderOnlyTpl'"
     "-- TPL_HeaderOnlyTpl_INCLUDE_DIRS='.+/HeaderOnlyTpl'"
     "Exported TPL_ENABLE_HeaderOnlyTpl='ON'"
@@ -158,14 +158,14 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeaderOnlyTpl_FindAll_TentativeEnable
   TPL_NAME  HeaderOnlyTpl
   TPL_FINDMOD  ${HeaderOnlyTpl_FINDMOD}
   INCLUDE_DIRS  ${HeaderOnlyTpl_BASE_DIR}
   EXTRA_ARGS  -DTPL_TENTATIVE_ENABLE_HeaderOnlyTpl=ON
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
+    "Processing enabled external package/TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
     "-- Attempting to tentatively enable TPL 'HeaderOnlyTpl' [.][.][.]"
     "-- TPL_HeaderOnlyTpl_INCLUDE_DIRS='.+/examples/tpls/HeaderOnlyTpl'"
     "-- Attempt to tentatively enable TPL 'HeaderOnlyTpl' passed!"
@@ -175,13 +175,13 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "Exported TPL_HeaderOnlyTpl_LIBRARIES=''"
   )
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeaderOnlyTpl_TplIncludeDirsOverride
   TPL_NAME  HeaderOnlyTpl
   TPL_FINDMOD  ${HeaderOnlyTpl_FINDMOD}
   EXTR_ARGS  -DTPL_HeaderOnlyTpl_INCLUDE_DIRS=/some/dir/somewhere
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
+    "Processing enabled external package/TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
     "-- TPL_HeaderOnlyTpl_INCLUDE_DIRS='/some/dir/somewhere'"
     "Exported TPL_HeaderOnlyTpl_NOT_FOUND='FALSE'"
     "Exported TPL_HeaderOnlyTpl_INCLUDE_DIRS='/some/dir/somewhere'"
@@ -189,14 +189,14 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeaderOnlyTpl_BadPath_ImplicitEnable
   TPL_NAME  HeaderOnlyTpl
   TPL_FINDMOD  ${HeaderOnlyTpl_FINDMOD}
   INCLUDE_DIRS  "/path_does_not_exist"
-  EXTR_ARGS  -DTPL_HeaderOnlyTpl_ENABLING_PKG=SimpleCxx
+  EXTR_ARGS  -DHeaderOnlyTpl_ENABLING_PKG=SimpleCxx
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeaderOnlyTpl .enabled by SimpleCxx, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
+    "Processing enabled external package/TPL: HeaderOnlyTpl .enabled by SimpleCxx, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
     "-- Must find at least one header in each of the header sets .HeaderOnlyTpl_stuff.hpp."
     "-- Searching for headers in HeaderOnlyTpl_INCLUDE_DIRS='/path_does_not_exist'"
     "-- Searching for a header file in the set .HeaderOnlyTpl_stuff.hpp.:"
@@ -223,18 +223,18 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "When you reconfigure, just grep the cmake stdout for 'HeaderOnlyTpl'"
     "and then follow the disables that occur as a result to see what impact"
     "this TPL disable has on the configuration of DummyProj."
-    "CMake Error at .+/TribitsProcessEnabledTpl[.]cmake:[0-9]+ .MESSAGE.:"
+    "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeaderOnlyTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeaderOnlyTpl_BadPath_ExplicitEnable
   TPL_NAME  HeaderOnlyTpl
   TPL_FINDMOD  ${HeaderOnlyTpl_FINDMOD}
   INCLUDE_DIRS  "/path_does_not_exist"
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
+    "Processing enabled external package/TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
     "TIP: Even though the TPL 'HeaderOnlyTpl' was explicitly enabled in input,"
     "it can be disabled with:"
     "  -DTPL_ENABLE_HeaderOnlyTpl=OFF"
@@ -244,19 +244,19 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "and then follow the disables that occur as a result to see what impact" 
     "this TPL disable has on the configuration of ${MOCK_PROJECT_NAME}."
     "-- ERROR: Failed finding all of the parts of TPL 'HeaderOnlyTpl' .see above., Aborting!"
-    "CMake Error at .+/TribitsProcessEnabledTpl[.]cmake:[0-9]+ .MESSAGE.:"
+    "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeaderOnlyTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeaderOnlyTpl_BadPath_TentativeEnable
   TPL_NAME  HeaderOnlyTpl
   TPL_FINDMOD  ${HeaderOnlyTpl_FINDMOD}
   INCLUDE_DIRS  "/path_does_not_exist"
   EXTRA_ARGS  -DTPL_TENTATIVE_ENABLE_HeaderOnlyTpl=ON
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
+    "Processing enabled external package/TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
     "-- Attempting to tentatively enable TPL 'HeaderOnlyTpl' ..."
     "-- Must find at least one header in each of the header sets .HeaderOnlyTpl_stuff.hpp."
     "-- Searching for headers in HeaderOnlyTpl_INCLUDE_DIRS='/path_does_not_exist'"
@@ -276,21 +276,21 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeaderOnlyTpl_BadPath_FailThenPass
   TPL_NAME  HeaderOnlyTpl
   TPL_FINDMOD  ${HeaderOnlyTpl_FINDMOD}
 
   INCLUDE_DIRS  "/path_does_not_exist"
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
+    "Processing enabled external package/TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
     "-- ERROR: Could not find the include directories for TPL 'HeaderOnlyTpl'!"
     "ERROR: TPL_HeaderOnlyTpl_NOT_FOUND=TRUE, aborting!"
     "Configuring incomplete, errors occurred!"
 
   RC_INCLUDE_DIRS  ${HeaderOnlyTpl_BASE_DIR}
   RC_PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
+    "Processing enabled external package/TPL: HeaderOnlyTpl .enabled explicitly, disable with -DTPL_ENABLE_HeaderOnlyTpl=OFF."
     "Found TPL 'HeaderOnlyTpl' include dirs '.*/examples/tpls/HeaderOnlyTpl'"
     "Exported TPL_ENABLE_HeaderOnlyTpl='ON'"
     "Exported TPL_HeaderOnlyTpl_NOT_FOUND='FALSE'"
@@ -306,11 +306,11 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
 #
 
 
-SET(HeadersAndLibsTpl_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tpls/HeadersAndLibsTpl)
-SET(HeadersAndLibsTpl_FINDMOD ${HeadersAndLibsTpl_BASE_DIR}/FindTPLHeadersAndLibsTpl.cmake)
+set(HeadersAndLibsTpl_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tpls/HeadersAndLibsTpl)
+set(HeadersAndLibsTpl_FINDMOD ${HeadersAndLibsTpl_BASE_DIR}/FindTPLHeadersAndLibsTpl.cmake)
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Shared_FindAll
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
@@ -318,7 +318,7 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
   TPL_FIND_SHARED_LIBS
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF." 
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF." 
     "-- Must find at least one lib in each of the lib sets .haltpl1[;]haltpl2."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
     "-- Searching for a lib in the set .haltpl1.:"
@@ -332,10 +332,10 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "-- Searching for headers in HeadersAndLibsTpl_INCLUDE_DIRS='.+/HeadersAndLibsTpl/include'"
     "-- Searching for a header file in the set .HeadersAndLibsTpl_header1.hpp.:"
     "--   Searching for header 'HeadersAndLibsTpl_header1.hpp' [.][.][.]"
-    "--     Found header '.+/HeadersAndLibsTpl/include/HeadersAndLibsTpl_header1.hpp'"
+    "--     Found header '.+/HeadersAndLibsTpl/include/?/HeadersAndLibsTpl_header1.hpp'"
     "-- Searching for a header file in the set .HeadersAndLibsTpl_header2.hpp.:"
     "--   Searching for header 'HeadersAndLibsTpl_header2.hpp' [.][.][.]"
-    "--     Found header '.+/HeadersAndLibsTpl/include/HeadersAndLibsTpl_header2.hpp'"
+    "--     Found header '.+/HeadersAndLibsTpl/include/?/HeadersAndLibsTpl_header2.hpp'"
     "-- Found TPL 'HeadersAndLibsTpl' include dirs '.+/HeadersAndLibsTpl/include'"
     "-- TPL_HeadersAndLibsTpl_INCLUDE_DIRS='.+/HeadersAndLibsTpl/include'"
     "Exported TPL_HeadersAndLibsTpl_NOT_FOUND='FALSE'"
@@ -344,7 +344,41 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+  create_process_enabled_tpls_test_case(
+    HeadersAndLibsTpl_Shared_PerLibrarySetting
+    TPL_NAME  HeadersAndLibsTpl
+    TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
+    INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
+    LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
+    EXTRA_ARGS -DHeadersAndLibsTpl_FIND_SHARED_LIBS=ON
+    PASS_REGULAR_EXPRESSION_ALL
+      "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+      "-- Must find at least one lib in each of the lib sets .haltpl1[;]haltpl2."
+      "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
+      "-- Searching for a lib in the set .haltpl1.:"
+      "--   Searching for lib 'haltpl1' [.][.][.]"
+      "--     Found lib '.+/HeadersAndLibsTpl/lib/libhaltpl1.so'"
+      "-- Searching for a lib in the set .haltpl2.:"
+      "--   Searching for lib 'haltpl2' [.][.][.]"
+      "--     Found lib '.+/HeadersAndLibsTpl/lib/libhaltpl2.so'"
+      "-- TPL_HeadersAndLibsTpl_LIBRARIES='.+/HeadersAndLibsTpl/lib/libhaltpl1.so[;].+/HeadersAndLibsTpl/lib/libhaltpl2.so'"
+      "-- Must find at least one header in each of the header sets .HeadersAndLibsTpl_header1.hpp[;]HeadersAndLibsTpl_header2.hpp."
+      "-- Searching for headers in HeadersAndLibsTpl_INCLUDE_DIRS='.+/HeadersAndLibsTpl/include'"
+      "-- Searching for a header file in the set .HeadersAndLibsTpl_header1.hpp.:"
+      "--   Searching for header 'HeadersAndLibsTpl_header1.hpp' [.][.][.]"
+      "--     Found header '.+/HeadersAndLibsTpl/include/?/HeadersAndLibsTpl_header1.hpp'"
+      "-- Searching for a header file in the set .HeadersAndLibsTpl_header2.hpp.:"
+      "--   Searching for header 'HeadersAndLibsTpl_header2.hpp' [.][.][.]"
+      "--     Found header '.+/HeadersAndLibsTpl/include/?/HeadersAndLibsTpl_header2.hpp'"
+      "-- Found TPL 'HeadersAndLibsTpl' include dirs '.+/HeadersAndLibsTpl/include'"
+      "-- TPL_HeadersAndLibsTpl_INCLUDE_DIRS='.+/HeadersAndLibsTpl/include'"
+      "Exported TPL_HeadersAndLibsTpl_NOT_FOUND='FALSE'"
+      "Exported TPL_HeadersAndLibsTpl_LIBRARIES='.+/HeadersAndLibsTpl/lib/libhaltpl1.so[;].+/HeadersAndLibsTpl/lib/libhaltpl2.so'"
+      "Exported TPL_HeadersAndLibsTpl_INCLUDE_DIRS='.+/HeadersAndLibsTpl/include'"
+    )
+
+
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Shared_FindAll_sets1
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
@@ -353,7 +387,7 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   TPL_FIND_SHARED_LIBS
   EXTRA_ARGS -DFIND_ONE_IN_SET_OF_HEADERS_1=ON -DFIND_ONE_IN_SET_OF_LIBS_1=ON
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Must find at least one lib in each of the lib sets .missinglib1 haltpl1[;]missinglib2 haltpl2."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
     "-- Searching for a lib in the set .missinglib1 haltpl1.:"
@@ -370,11 +404,11 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "-- Searching for a header file in the set .MissingHeader1.hpp HeadersAndLibsTpl_header1.hpp.:"
     "--   Searching for header 'MissingHeader1.hpp' [.][.][.]"
     "--   Searching for header 'HeadersAndLibsTpl_header1.hpp' [.][.][.]"
-    "--     Found header '.+/HeadersAndLibsTpl/include/HeadersAndLibsTpl_header1.hpp'"
+    "--     Found header '.+/HeadersAndLibsTpl/include/?/HeadersAndLibsTpl_header1.hpp'"
     "-- Searching for a header file in the set .MissingHeader2.hpp HeadersAndLibsTpl_header2.hpp.:"
     "--   Searching for header 'MissingHeader2.hpp' [.][.][.]"
     "--   Searching for header 'HeadersAndLibsTpl_header2.hpp' [.][.][.]"
-    "--     Found header '.+/HeadersAndLibsTpl/include/HeadersAndLibsTpl_header2.hpp'"
+    "--     Found header '.+/HeadersAndLibsTpl/include/?/HeadersAndLibsTpl_header2.hpp'"
     "-- Found TPL 'HeadersAndLibsTpl' include dirs '.+/HeadersAndLibsTpl/include'"
     "-- TPL_HeadersAndLibsTpl_INCLUDE_DIRS='.+/HeadersAndLibsTpl/include'"
     "Exported TPL_HeadersAndLibsTpl_NOT_FOUND='FALSE'"
@@ -383,14 +417,14 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_FindAll
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
   INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
   LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Must find at least one lib in each of the lib sets .haltpl1[;]haltpl2."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
     "-- Searching for a lib in the set .haltpl1.:"
@@ -405,7 +439,7 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_OverrideLibNames
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
@@ -418,7 +452,7 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_SkipLibsOverride
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
@@ -430,7 +464,7 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_OverrideAll
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
@@ -444,15 +478,15 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_BadLibPath
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
   INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
   LIBRARY_DIRS  /path/does/not/exist
-  EXTR_ARGS  -DTPL_HeadersAndLibsTpl_ENABLING_PKG=SomePackage
+  EXTR_ARGS  -DHeadersAndLibsTpl_ENABLING_PKG=SomePackage
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Must find at least one lib in each of the lib sets .haltpl1[;]haltpl2."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='/path/does/not/exist'"
     "-- Searching for a lib in the set .haltpl1.:"
@@ -481,21 +515,21 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "When you reconfigure, just grep the cmake stdout for 'HeadersAndLibsTpl'"
     "and then follow the disables that occur as a result to see what impact"
     "this TPL disable has on the configuration of DummyProj."
-   "CMake Error at .+/TribitsProcessEnabledTpl.cmake:[0-9]+ .MESSAGE.:"
+   "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeadersAndLibsTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_BadLibPath_NotMustFindAllLibs
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
   INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
   LIBRARY_DIRS  /path/does/not/exist
-  EXTR_ARGS  -DTPL_HeadersAndLibsTpl_ENABLING_PKG=SomePackage
+  EXTR_ARGS  -DHeadersAndLibsTpl_ENABLING_PKG=SomePackage
     -DNOT_MUST_FIND_ALL_LIBS=ON
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='/path/does/not/exist'"
     "-- Searching for a lib in the set .haltpl1.:"
     "-- NOTE: Did not find a lib in the lib set .haltpl1. for the TPL 'HeadersAndLibsTpl'!"
@@ -503,21 +537,21 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "-- TIP: If the TPL 'HeadersAndLibsTpl' is on your system then you can set:"
     "-- ERROR: Failed finding all of the parts of TPL 'HeadersAndLibsTpl' .see above., Aborting!"
     "TIP: One way to get past the configure failure for the"
-    "CMake Error at .+/TribitsProcessEnabledTpl.cmake:[0-9]+ .MESSAGE.:"
+    "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeadersAndLibsTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_BadLibName1_MustFind
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
   INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
   LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
   EXTRA_ARGS  -DHeadersAndLibsTpl_LIBRARY_NAMES="badlibname"
-    -DTPL_HeadersAndLibsTpl_ENABLING_PKG=SomePackage
+    -DHeadersAndLibsTpl_ENABLING_PKG=SomePackage
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Must find at least one lib in each of the lib sets .badlibname."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
     "-- Searching for a lib in the set .badlibname.:"
@@ -526,59 +560,59 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "-- TIP: If the TPL 'HeadersAndLibsTpl' is on your system then you can set:"
     "-- ERROR: Failed finding all of the parts of TPL 'HeadersAndLibsTpl' .see above., Aborting!"
     "TIP: One way to get past the configure failure for the"
-    "CMake Error at .+/TribitsProcessEnabledTpl.cmake:[0-9]+ .MESSAGE.:"
+    "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeadersAndLibsTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_BadLibName1_NotMustFind
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
   INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
   LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
   EXTRA_ARGS  -DHeadersAndLibsTpl_LIBRARY_NAMES="badlibname,"
-    -DTPL_HeadersAndLibsTpl_ENABLING_PKG=SomePackage
+    -DHeadersAndLibsTpl_ENABLING_PKG=SomePackage
     -DNOT_MUST_FIND_ALL_LIBS=ON
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
     "-- Searching for a lib in the set .badlibname.:"
     "-- NOTE: Did not find a lib in the lib set .badlibname. for the TPL 'HeadersAndLibsTpl'!"
-    "CMake Error at .+/TribitsProcessEnabledTpl.cmake:[0-9]+ .MESSAGE.:"
+    "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeadersAndLibsTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_BadLibName2_MustFind
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
   INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
   LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
   EXTRA_ARGS  -DHeadersAndLibsTpl_LIBRARY_NAMES="haltpl2,badlibname"
-    -DTPL_HeadersAndLibsTpl_ENABLING_PKG=SomePackage
+    -DHeadersAndLibsTpl_ENABLING_PKG=SomePackage
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
     "-- Searching for a lib in the set .badlibname.:"
     "-- ERROR: Did not find a lib in the lib set .badlibname. for the TPL 'HeadersAndLibsTpl'!"
-    "CMake Error at .+/TribitsProcessEnabledTpl.cmake:[0-9]+ .MESSAGE.:"
+    "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeadersAndLibsTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_BadLibName2_NotMustFind
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
   INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
   LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
   EXTRA_ARGS  -DHeadersAndLibsTpl_LIBRARY_NAMES="haltpl2,badlibname"
-    -DTPL_HeadersAndLibsTpl_ENABLING_PKG=SomePackage
+    -DHeadersAndLibsTpl_ENABLING_PKG=SomePackage
     -DNOT_MUST_FIND_ALL_LIBS=ON
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
     "-- Searching for a lib in the set .badlibname.:"
     "-- NOTE: Did not find a lib in the lib set .badlibname. for the TPL 'HeadersAndLibsTpl'!"
@@ -588,27 +622,27 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Static_BadLibName2_NotMustFind_ProjectMustFindAllTplLibs
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
   INCLUDE_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/include
   LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
   EXTRA_ARGS  -DHeadersAndLibsTpl_LIBRARY_NAMES="haltpl2,badlibname"
-    -DTPL_HeadersAndLibsTpl_ENABLING_PKG=SomePackage
+    -DHeadersAndLibsTpl_ENABLING_PKG=SomePackage
     -DNOT_MUST_FIND_ALL_LIBS=ON
     -D${MOCK_PROJECT_NAME}_MUST_FIND_ALL_TPL_LIBS=ON
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled by SomePackage, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='.+/HeadersAndLibsTpl/lib'"
     "-- Searching for a lib in the set .badlibname.:"
     "-- ERROR: Did not find a lib in the lib set .badlibname. for the TPL 'HeadersAndLibsTpl'!"
-    "CMake Error at .+/TribitsProcessEnabledTpl.cmake:[0-9]+ .MESSAGE.:"
+    "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeadersAndLibsTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Shared_BadIncludeDir_NotMustFindAllHeaders
   TPL_NAME  HeadersAndLibsTpl
   TPL_FINDMOD  ${HeadersAndLibsTpl_FINDMOD}
@@ -617,7 +651,7 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   TPL_FIND_SHARED_LIBS
   EXTR_ARGS  -DNOT_MUST_FIND_ALL_HEADERS=ON
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- TPL_HeadersAndLibsTpl_LIBRARIES='.+/HeadersAndLibsTpl/lib/libhaltpl1.so[;].+/HeadersAndLibsTpl/lib/libhaltpl2.so'"
     "-- Searching for headers in HeadersAndLibsTpl_INCLUDE_DIRS='/include/path/does/not/exist'"
     "-- ERROR: Could not find a header file in the set .HeadersAndLibsTpl_header1.hpp."
@@ -626,12 +660,12 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
     "-- TIP: If the TPL 'HeadersAndLibsTpl' is on your system then you can set:"
     "-- ERROR: Failed finding all of the parts of TPL 'HeadersAndLibsTpl' .see above., Aborting!"
     "TIP: Even though the TPL 'HeadersAndLibsTpl' was explicitly enabled in input,"
-    "CMake Error at .+/TribitsProcessEnabledTpl.cmake:[0-9]+ .MESSAGE.:"
+    "CMake Error at .+/TribitsProcessEnabledTpls[.]cmake:[0-9]+ [(]message[)]:"
     "ERROR: TPL_HeadersAndLibsTpl_NOT_FOUND=TRUE, aborting!"
   )
 
 
-CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
+create_process_enabled_tpls_test_case(
   HeadersAndLibsTpl_Shared_BadLibPath_ThenPass
   TPL_NAME  HeadersAndLibsTpl
   TPL_FIND_SHARED_LIBS
@@ -641,7 +675,7 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   LIBRARY_DIRS  /path/does/not/exist
   EXTR_ARGS
   PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "-- Searching for libs in HeadersAndLibsTpl_LIBRARY_DIRS='/path/does/not/exist'"
     "-- ERROR: Could not find the libraries for the TPL 'HeadersAndLibsTpl'!"
     "-- ERROR: Failed finding all of the parts of TPL 'HeadersAndLibsTpl' .see above., Aborting!"
@@ -652,7 +686,7 @@ CREATE_PROCESS_ENABLED_TPLS_TEST_CASE(
   RC_LIBRARY_DIRS  ${HeadersAndLibsTpl_BASE_DIR}/lib
   RC_EXTR_ARGS  -DNOT_MUST_FIND_ALL_HEADERS=ON
   RC_PASS_REGULAR_EXPRESSION_ALL
-    "Processing enabled TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
+    "Processing enabled external package/TPL: HeadersAndLibsTpl .enabled explicitly, disable with -DTPL_ENABLE_HeadersAndLibsTpl=OFF."
     "Exported TPL_HeadersAndLibsTpl_NOT_FOUND='FALSE'"
     "Exported TPL_HeadersAndLibsTpl_LIBRARIES='.*/ProcessEnabledTpls/tpls/HeadersAndLibsTpl/lib/libhaltpl1.so[;].*/ProcessEnabledTpls/tpls/HeadersAndLibsTpl/lib/libhaltpl2.so'"
     "Exported TPL_HeadersAndLibsTpl_INCLUDE_DIRS='.*/ProcessEnabledTpls/tpls/HeadersAndLibsTpl/include'"

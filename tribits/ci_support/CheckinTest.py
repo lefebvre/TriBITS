@@ -1,40 +1,10 @@
 # @HEADER
-# ************************************************************************
-#
+# *****************************************************************************
 #            TriBITS: Tribal Build, Integrate, and Test System
-#                    Copyright 2013 Sandia Corporation
 #
-# Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-# the U.S. Government retains certain rights in this software.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-# 1. Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright
-# notice, this list of conditions and the following disclaimer in the
-# documentation and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the Corporation nor the names of the
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# ************************************************************************
+# Copyright 2013-2016 NTESS and the TriBITS contributors.
+# SPDX-License-Identifier: BSD-3-Clause
+# *****************************************************************************
 # @HEADER
 
 
@@ -68,6 +38,7 @@ from CheckinTestConstants import *
 from TribitsDependencies import getProjectDependenciesFromXmlFile
 from TribitsDependencies import getDefaultDepsXmlInFile
 from TribitsPackageFilePathUtils import *
+from Python2and3 import s
 import gitdist
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -293,10 +264,10 @@ def getReposStats(inOptions, tribitsGitRepos):
     repoStatTableDirName = getRepoStatTableDirName(inOptions, gitRepo.repoDir)
     repoStatTable.insertRepoStat(repoStatTableDirName, gitRepo.gitRepoStats, repoIdx)
     repoIdx += 1
-  print(gitdist.createAsciiTable(repoStatTable.getTableData()))
+  print(gitdist.createTable(repoStatTable.getTableData()))
   return hasChangesToPush
   # NOTE: Above, we could just call 'gitdist dist-repo-status' but by
-  # printing the table here with the actualy gitRepoStat data, we ensure
+  # printing the table here with the actually gitRepoStat data, we ensure
   # that it gets collected correctly and that the selection of repos is
   # exactly the same.
 
@@ -752,7 +723,7 @@ def writeDefaultBuildSpecificConfigFile(buildTestCaseName):
 
   else:
 
-   # ToDo: Get rid fo these!  These are too specific!
+   # ToDo: Get rid of these!  These are too specific!
 
     print("\nCreating a default skeleton file " + buildSpecificConfigFileName +
           " ...")
@@ -846,7 +817,7 @@ def getCurrentDiffOutputAndLogModified(inOptions, gitRepo, baseTestDir):
 
 def extractPackageEnablesFromChangeStatus(changedFileDiffOutputStr, inOptions_inout,
   gitRepo, enablePackagesList_inout, verbose=True,
-  projectDependenciesLocal=None ) \
+  projectDependenciesLocal=None, projectChangeLogic=DefaultProjectCiFileChangeLogic() ) \
   :
 
   if not projectDependenciesLocal:
@@ -859,11 +830,11 @@ def extractPackageEnablesFromChangeStatus(changedFileDiffOutputStr, inOptions_in
 
     # Only look for global rebuild files in the master repo (not in extra repos)
     if gitRepo.repoName == '' and \
-      isGlobalBuildFileRequiringGlobalRebuild(modifiedFileFullPath) \
+      projectChangeLogic.isGlobalBuildFileRequiringGlobalRebuild(modifiedFileFullPath) \
       :
       if inOptions_inout.enableAllPackages == 'auto':
         if verbose:
-          print("\nModifed file: '" + modifiedFileFullPath + "'\n" +
+          print("\nModified file: '" + modifiedFileFullPath + "'\n" +
                 "  => Enabling all " + inOptions_inout.projectName +
                 " packages!")
         inOptions_inout.enableAllPackages = 'on'
@@ -1162,7 +1133,7 @@ def analyzeResultsSendEmail(inOptions, buildTestCase,
   emailBody += "Hostname: " + getHostname() + "\n"
   emailBody += "Source Dir: " + inOptions.srcDir + "\n"
   emailBody += "Build Dir: " + os.getcwd() + "\n"
-  emailBody += "\nCMake Cache Varibles: " + ' '.join(cmakeOptions) + "\n"
+  emailBody += "\nCMake Cache Variables: " + ' '.join(cmakeOptions) + "\n"
   if inOptions.extraCmakeOptions:
     emailBody += "Extra CMake Options: " + inOptions.extraCmakeOptions + "\n"
   if inOptions.makeOptions:
@@ -1326,6 +1297,8 @@ def getEnablesLists(inOptions, validPackageTypesList, isDefaultBuild,
   cmakePkgOptions = []
   enablePackagesList = []
   gitRepoList = tribitsGitRepos.gitRepoList()
+  projectChangeLogic=getProjectCiFileChangeLogic(inOptions.srcDir)
+
   enableAllPackages = False
 
   if inOptions.enableAllPackages == "on":
@@ -1349,8 +1322,8 @@ def getEnablesLists(inOptions, validPackageTypesList, isDefaultBuild,
       if os.path.exists(diffOutFileName):
         changedFileDiffOutputStr = open(diffOutFileName, 'r').read()
         #print("\nchangedFileDiffOutputStr:\n", changedFileDiffOutputStr)
-        extractPackageEnablesFromChangeStatus(changedFileDiffOutputStr, inOptions, gitRepo,
-          enablePackagesList, verbose)
+        extractPackageEnablesFromChangeStatus(changedFileDiffOutputStr, inOptions,
+          gitRepo, enablePackagesList, verbose, projectChangeLogic=projectChangeLogic)
       else:
         if verbose:
           print("\nThe file " + diffOutFileName + " does not exist!\n")
@@ -1460,11 +1433,12 @@ def runBuildTestCase(inOptions, tribitsGitRepos, buildTestCase, timings):
     # A.1) Set the base options
   
     cmakeBaseOptions = []
+    if inOptions.useNinja:
+      cmakeBaseOptions.append("-GNinja")
     if inOptions.extraCmakeOptions:
       cmakeBaseOptions.extend(commandLineOptionsToList(inOptions.extraCmakeOptions))
-  
     cmakeBaseOptions.append(cmakeScopedDefine(projectName,
-      "TRIBITS_DIR:PATH", inOptions.tribitsDir))
+    "TRIBITS_DIR:PATH", inOptions.tribitsDir))
     cmakeBaseOptions.append(cmakeScopedDefine(projectName,
       "ENABLE_TESTS:BOOL", "ON"))
     cmakeBaseOptions.append(cmakeScopedDefine(projectName,
@@ -1484,7 +1458,7 @@ def runBuildTestCase(inOptions, tribitsGitRepos, buildTestCase, timings):
       True)
     if not result: preConfigurePassed = False
 
-    reuslt = readAndAppendCMakeOptions(
+    result = readAndAppendCMakeOptions(
       inOptions.projectName,
       os.path.join("..", getBuildSpecificConfigFileName(buildTestCaseName)),
       cmakeBaseOptions,
@@ -1576,7 +1550,10 @@ def runBuildTestCase(inOptions, tribitsGitRepos, buildTestCase, timings):
   
     if inOptions.doBuild and configurePassed:
   
-      cmnd = "make"
+      if inOptions.useNinja:
+        cmnd = "ninja"
+      else:
+        cmnd = "make"
       if inOptions.makeOptions:
         cmnd += " " + inOptions.makeOptions
   
@@ -1700,6 +1677,28 @@ def cleanBuildTestCaseOutputFiles(runBuildTestCaseBool, inOptions, baseTestDir, 
       removeIfExists(getEmailBodyFileName())
       removeIfExists(getEmailSuccessFileName())
       echoChDir("..")
+
+def cleanBuildTestCaseSuccessFiles(runBuildTestCaseBool, inOptions, baseTestDir, \
+  buildTestCaseName \
+  ):
+
+  removeIfExists(buildTestCaseName+"/"+getConfigureSuccessFileName())
+  removeIfExists(buildTestCaseName+"/"+getBuildSuccessFileName())
+  removeIfExists(buildTestCaseName+"/"+getTestSuccessFileName())
+  removeIfExists(buildTestCaseName+"/"+getEmailSuccessFileName())
+  removeIfExists(buildTestCaseName+"/"+getEmailBodyFileName())
+  # NOTE: ABove, we need to delete the 'email.out' file otherwise it will get
+  # picked up in a later run of just a status check.  But this info is not
+  # really last because it is duplicated in the file
+  # commitStatusEmailBody.out.
+
+
+def cleanSuccessFiles(buildTestCaseList, inOptions, baseTestDir):
+  print("\nRemoving *.success files ...\n")
+  removeIfExists(getInitialPullSuccessFileName())
+  for buildTestCase in buildTestCaseList:
+    cleanBuildTestCaseSuccessFiles(
+      buildTestCase.runBuildTestCase, inOptions, baseTestDir, buildTestCase.name)
 
 
 def runBuildTestCaseDriver(inOptions, tribitsGitRepos, baseTestDir, buildTestCase, timings):
@@ -1836,7 +1835,7 @@ def getEnableStatusList(inOptions, enabledPackagesList):
 # trailing build/test summary data.
 #
 # NOTE: This function assumes that there will be at least one blank line
-# between the buid/test summay data block and the original text message.  If
+# between the build/test summary data block and the original text message.  If
 # there is not, this function will throw!
 #
 def getLastCommitMessageStrFromRawCommitLogStr(rawLogOutput):
@@ -2084,6 +2083,8 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
 
   success = True
 
+  didAtLeastOnePush = False
+
   timings = Timings()
 
   subjectLine = None
@@ -2226,7 +2227,7 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
     if doingAtLeastOnePull and pullPassed:
 
       #
-      print("\n3.a) Check that there are no uncommited and no new unknown "
+      print("\n3.a) Check that there are no uncommitted and no new unknown "
             "files before doing the pull(s) ...\n")
       #
 
@@ -2420,12 +2421,12 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
       elif reposAreClean and not hasChangesToPush and \
         inOptions.abortGracefullyIfNoChangesToPush \
         :
-        print("\nNot perfoming any build cases because there are no local "
+        print("\nNot performing any build cases because there are no local "
               "changes to push and --abort-gracefully-if-no-changes-to-push!\n")
         abortGracefullyDueToNoChangesToPush = True
         runBuildCases = False
       elif pullPassed:
-        print("\nThe pull passsed, running the build/test cases ...\n")
+        print("\nThe pull passed, running the build/test cases ...\n")
         runBuildCases = True
       else:
         print("\nNot running any build/test cases because the pull failed!\n")
@@ -2535,7 +2536,7 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
            atLeastOneConfigureBuildAttemptPassed = True
 
       if not atLeastOneConfigureBuildAttemptPassed:
-        print("\nThere were no successfuly attempts to configure/build/test!")
+        print("\nThere were no successful attempts to configure/build/test!")
         okayToCommit = False
 
       if not okayToCommit:
@@ -2572,7 +2573,7 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
           abortedCommitPush = True
       else:
         okayToPush = False
-  
+
       if okayToPush:
         print("\n  => A PUSH IS READY TO BE PERFORMED!")
       else:
@@ -2681,7 +2682,7 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
 
       else:  # inOptions.appendTestResults and okayToPush
   
-        print("\nAttempting to amend the final commmit message ...\n")
+        print("\nAttempting to amend the final commit message ...\n")
 
         repoIdx = 0
         for gitRepo in tribitsGitRepos.gitRepoList():
@@ -2700,7 +2701,7 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
               # Get then final commit message
               finalCommitEmailBodyStr = lastCommitMessageStr
               finalCommitEmailBodyStr += getAutomatedStatusSummaryHeaderStr()
-              finalCommitEmailBodyStr += shortCommitEmailBodyExtra.encode("utf8")
+              finalCommitEmailBodyStr += shortCommitEmailBodyExtra
               finalCommitEmailBodyStr += localCommitSHA1ListStr
               if forcedCommitPush:
                 finalCommitEmailBodyStr += "WARNING: Forced the push!\n"
@@ -2778,8 +2779,6 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
         debugSkipPush = os.environ.get("CHECKIN_TEST_SKIP_PUSH","")
         #print("debugSkipPush =", debugSkipPush)
         #debugSkipPush = True
-
-        didAtLeastOnePush = False
 
         repoIdx = 0
         for gitRepo in tribitsGitRepos.gitRepoList():
@@ -2922,9 +2921,13 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
           success = False
       else:
         if okayToPush:
-          subjectLine = "READY TO PUSH"
+          subjectLine = "PASSED (READY TO PUSH)"
         else:
-          subjectLine = "NOT READY TO PUSH"
+          if success:
+            subjectLine = "PASSED"
+          else:
+            subjectLine = "FAILED"
+          subjectLine += " (NOT READY TO PUSH)"
 
       #
       print("\n9.b) Create and send out push (or readiness status) notification email ...")
@@ -2985,6 +2988,8 @@ def checkinTest(tribitsDir, inOptions, configuration={}):
       print("\nNot performing push or sending out push readiness status on "
             "request!")
 
+    if pushPassed and didAtLeastOnePush and didPush:
+      cleanSuccessFiles(buildTestCaseList, inOptions, baseTestDir)
   
     print("\n***")
     print("*** 10) Run execute extra command on ready to push  ...")

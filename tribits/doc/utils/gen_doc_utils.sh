@@ -22,7 +22,7 @@
 # avoid triggering a change in the timestamp of the file <base_file_name>.
 #
 # This isused to create *.tmp files and then we only copy to the files
-# actually mentioned in the Makefile if they are differnet.  That way if the
+# actually mentioned in the Makefile if they are different.  That way if the
 # files don't change then the function will not copy over them and update
 # their time stamp and the makefile will not rebuild the documentation.  We
 # don't want to rebuild documentation if nothing changed.
@@ -51,7 +51,8 @@ function generate_git_version_file {
     echo
     echo "Generating git version"
     echo
-    echo `git describe --match="$_TRIBITS_TAG_PREFIX*"` > TribitsGitVersion.txt
+    git describe --always --match="$_TRIBITS_TAG_PREFIX*" > TribitsGitVersion.txt || \
+      echo "$_TRIBITS_TAG_PREFIX.{Unknown version}" > TribitsGitVersion.txt
   else
     echo "$_TRIBITS_TAG_PREFIX.{Unknown version}" > TribitsGitVersion.txt
   fi

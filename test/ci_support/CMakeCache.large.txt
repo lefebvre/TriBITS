@@ -434,7 +434,7 @@ CMAKE_Fortran_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 //If set to non-empty, will override CMAKE_Fortran_FLAGS_RELWITHDEBINFO
 CMAKE_Fortran_FLAGS_RELWITHDEBINFO_OVERRIDE:STRING=
 
-//Base install directory (overridde default from "/usr/local" to
+//Base install directory (override default from "/usr/local" to
 // empty "")
 CMAKE_INSTALL_PREFIX:PATH=
 
@@ -1645,10 +1645,10 @@ MPI_C_LINK_FLAGS:STRING= -Wl,-rpath  -Wl,/projects/vera/gcc-4.8.3/toolset/mpich-
 //Where can one of the mpiexec or mpirun libraries be found
 MPI_EXEC:FILEPATH=/projects/vera/gcc-4.8.3/toolset/mpich-3.1.3/bin/mpiexec
 
-//The default mumber of processes to use when running MPI programs.
+//The default number of processes to use when running MPI programs.
 MPI_EXEC_DEFAULT_NUMPROCS:STRING=4
 
-//The maximum mumber of processes to use when running MPI programs.
+//The maximum number of processes to use when running MPI programs.
 //  Tests with more procs are excluded.
 MPI_EXEC_MAX_NUMPROCS:STRING=12
 
@@ -3810,8 +3810,6 @@ TPL_ENABLE_X11:STRING=
 //  This can be set to 'ON', 'OFF', or left empty ''.
 TPL_ENABLE_XDMF:STRING=
 
-TPL_ENABLE_Zlib:BOOL=ON
-
 //Enable support for the TPL couple in all supported VERA packages.
 //  This can be set to 'ON', 'OFF', or left empty ''.
 TPL_ENABLE_couple:STRING=
@@ -3889,7 +3887,7 @@ TPL_QT_INCLUDE_DIRS:PATH=/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/include/QtDe
 TPL_QT_LIBRARIES:PATH=/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtXmlPatterns.so;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtNetwork.so;optimized;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtSql.so;debug;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtSql_debug.so;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtGui.so;optimized;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtTest.so;debug;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtTest_debug.so;optimized;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtXml.so;debug;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtXml_debug.so;optimized;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtCore.so;debug;/projects/vera/gcc-4.8.3/tpls/opt/qt-4.8.2/lib/libQtCore_debug.so;pthread
 
 //A FindTPLQT.cmake specific variable that defines where the Qt
-// Qmake Execuatable is
+// Qmake Executable is
 TPL_QT_QMAKE_EXECUTABLE:STRING=
 
 //List of semi-colon separated paths to append to the compile invocations
@@ -3908,20 +3906,6 @@ TPL_SILO_LIBRARIES:FILEPATH=/projects/vera/gcc-4.8.3/tpls/opt/silo-4.10.2/lib/li
 
 //autoset
 TPL_TENTATIVE_ENABLE_Pthread:STRING=ON
-
-//List of semi-colon separated paths to append to the compile invocations
-// to find the headers for the TPL Zlib.  This is the final variable
-// that is used in the build commands.  The user variable Zlib_INCLUDE_DIRS
-// is used to look for the given headers first but is just a suggestion.
-// This variable, however, is the final value and will not be touched.
-TPL_Zlib_INCLUDE_DIRS:PATH=/projects/vera/gcc-4.8.3/tpls/opt/zlib-1.2.7/include
-
-//List of semi-colon separated full paths to the libraries for
-// the TPL Zlib.  This is the final variable that is used in the
-// link commands.  The user variable Zlib_LIBRARY_DIRS is used
-// to look for the know library names but but is just a suggestion.
-// This variable, however, is the final value and will not be touched.
-TPL_Zlib_LIBRARIES:FILEPATH=/projects/vera/gcc-4.8.3/tpls/opt/zlib-1.2.7/lib/libz.so
 
 //If set to true, then strong warnings for package Teko will be
 // disabled.
@@ -4276,7 +4260,7 @@ Tpetra_INST_COMPLEX_FLOAT:BOOL=OFF
 Tpetra_INST_CUDA:BOOL=OFF
 
 //Instantiate and/or test Tpetra classes over Scalar = dd_real
-// (requries TPL QD).  This option is OFF by default.
+// (requires TPL QD).  This option is OFF by default.
 Tpetra_INST_DD_REAL:BOOL=OFF
 
 //Set by default in vera-core-enables.disables.cmake
@@ -4316,7 +4300,7 @@ Tpetra_INST_OPENMP:BOOL=OFF
 Tpetra_INST_PTHREAD:BOOL=OFF
 
 //Instantiate and/or test Tpetra classes over Scalar = qd_real
-// (requries TPL QD).  This option is OFF by default.
+// (requires TPL QD).  This option is OFF by default.
 Tpetra_INST_QD_REAL:BOOL=OFF
 
 //Set by default in vera-core-enables.disables.cmake
@@ -4509,9 +4493,6 @@ VERAIn_XML_ENABLE_TESTS:STRING=
 
 //No help, variable specified on the command line.
 VERA_ALLOW_NO_PACKAGES:BOOL=ON
-
-//Determines if asserts are performed on missing packages or not.
-VERA_ASSERT_MISSING_PACKAGES:BOOL=ON
 
 //Value Computed by CMake
 VERA_BINARY_DIR:STATIC=/localhome/8vt/PROJECTS/VERA.base/BUILDS/GCC-4.8.3/MOCK_MPI_DEBUG_GCC461_CI/BUILD
@@ -4958,9 +4939,6 @@ VERA_ENABLE_EXAMPLES:STRING=
 
 //Set by default in std/gcc-4.8.3/base-options.cmake
 VERA_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON
-
-//Disabled in vera-core-enables-disables.cmake
-VERA_ENABLE_EXPORT_MAKEFILES:BOOL=OFF
 
 //Enable the package Epetra.  Set to 'ON', 'OFF', or leave empty
 // to allow for other logic to decide.
@@ -6818,17 +6796,6 @@ XsdrnFlux_LIB_DEPENDS:STATIC=general;MGTransportLib;general;ampxClib;general;amp
 //Dependencies for the target
 XsdrnFlux_fortranlib_LIB_DEPENDS:STATIC=general;XsdrnFlux;
 
-Zlib_INCLUDE_DIRS:FILEPATH=/projects/vera/gcc-4.8.3/tpls/opt/zlib-1.2.7/include
-
-Zlib_LIBRARY_DIRS:FILEPATH=/projects/vera/gcc-4.8.3/tpls/opt/zlib-1.2.7/lib
-
-//List of semi-colon separated names of libraries needed to link
-// to for the TPL Zlib.  This list of libraries will be search
-// for in FIND_LIBRARY(...) calls along with the directories specified
-// with Zlib_LIBRARY_DIRS.  NOTE: This is not the final list of
-// libraries used for linking.  That is specified by TPL_Zlib_LIBRARIES!
-Zlib_LIBRARY_NAMES:STRING=z
-
 //If set to true, then strong warnings for package Zoltan will
 // be disabled.
 Zoltan_DISABLE_STRONG_WARNINGS:BOOL=OFF
@@ -6909,12 +6876,6 @@ _SILO_silo.h_PATH:PATH=/projects/vera/gcc-4.8.3/tpls/opt/silo-4.10.2/include
 
 //Path to a library.
 _SILO_siloh5_LIBRARY:FILEPATH=/projects/vera/gcc-4.8.3/tpls/opt/silo-4.10.2/lib/libsiloh5.so
-
-//Path to a library.
-_Zlib_z_LIBRARY:FILEPATH=/projects/vera/gcc-4.8.3/tpls/opt/zlib-1.2.7/lib/libz.so
-
-//Path to a file.
-_Zlib_zlib.h_PATH:PATH=/projects/vera/gcc-4.8.3/tpls/opt/zlib-1.2.7/include
 
 //Path to a file.
 _fcmakelists:FILEPATH=/home/8vt/localhome/PROJECTS/VERA.base/VERA/TriBITS/tribits/core/config_tests/fmangle
@@ -11555,8 +11516,6 @@ TPL_ENABLE_VTune-STRINGS:INTERNAL=;ON;OFF
 TPL_ENABLE_X11-STRINGS:INTERNAL=;ON;OFF
 //STRINGS property for variable: TPL_ENABLE_XDMF
 TPL_ENABLE_XDMF-STRINGS:INTERNAL=;ON;OFF
-//STRINGS property for variable: TPL_ENABLE_Zlib
-TPL_ENABLE_Zlib-STRINGS:INTERNAL=;ON;OFF
 //STRINGS property for variable: TPL_ENABLE_couple
 TPL_ENABLE_couple-STRINGS:INTERNAL=;ON;OFF
 //STRINGS property for variable: TPL_ENABLE_gpcd
@@ -11607,12 +11566,6 @@ TPL_SILO_LIBRARY_DIRS:INTERNAL=
 TPL_SILO_NOT_FOUND:INTERNAL=FALSE
 //ADVANCED property for variable: TPL_TENTATIVE_ENABLE_Pthread
 TPL_TENTATIVE_ENABLE_Pthread-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: TPL_Zlib_INCLUDE_DIRS
-TPL_Zlib_INCLUDE_DIRS-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: TPL_Zlib_LIBRARIES
-TPL_Zlib_LIBRARIES-ADVANCED:INTERNAL=1
-TPL_Zlib_LIBRARY_DIRS:INTERNAL=
-TPL_Zlib_NOT_FOUND:INTERNAL=FALSE
 TRIBITS_ADD_TEST_ADD_TEST_INPUT:INTERNAL=
 TRIBITS_SET_TEST_PROPERTIES_INPUT:INTERNAL=
 TRILINOS_HAVE_LINEAR_SOLVER_FACTORY_REGISTRATION:INTERNAL=ON
@@ -12158,8 +12111,6 @@ VERAIn_XML_TEST_OPTIONAL_DEP_PACKAGES:INTERNAL=
 VERAIn_XML_TEST_REQUIRED_DEP_PACKAGES:INTERNAL=
 //ADVANCED property for variable: VERA_ALLOW_NO_PACKAGES
 VERA_ALLOW_NO_PACKAGES-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: VERA_ASSERT_MISSING_PACKAGES
-VERA_ASSERT_MISSING_PACKAGES-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: VERA_CDASH_DEPS_XML_OUTPUT_FILE
 VERA_CDASH_DEPS_XML_OUTPUT_FILE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: VERA_CMAKE_EXECUTABLE_SUFFIX
@@ -12376,8 +12327,6 @@ VERA_ENABLE_Domi-STRINGS:INTERNAL=;ON;OFF
 VERA_ENABLE_EXAMPLES-STRINGS:INTERNAL=;ON;OFF
 //ADVANCED property for variable: VERA_ENABLE_EXPLICIT_INSTANTIATION
 VERA_ENABLE_EXPLICIT_INSTANTIATION-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: VERA_ENABLE_EXPORT_MAKEFILES
-VERA_ENABLE_EXPORT_MAKEFILES-ADVANCED:INTERNAL=1
 //STRINGS property for variable: VERA_ENABLE_Epetra
 VERA_ENABLE_Epetra-STRINGS:INTERNAL=;ON;OFF
 //STRINGS property for variable: VERA_ENABLE_EpetraExt
@@ -13477,12 +13426,6 @@ YieldSampler_LIB_OPTIONAL_DEP_PACKAGES:INTERNAL=
 YieldSampler_LIB_REQUIRED_DEP_PACKAGES:INTERNAL=ScaleLib;Origen;SequenceCouple;AmpxLoader;AmpxLoader;AmpxLib;ScaleResource;ScaleList;ScaleUtilsIO;ScaleFileUtils;ScaleFileUtils
 YieldSampler_TEST_OPTIONAL_DEP_PACKAGES:INTERNAL=
 YieldSampler_TEST_REQUIRED_DEP_PACKAGES:INTERNAL=
-//ADVANCED property for variable: Zlib_INCLUDE_DIRS
-Zlib_INCLUDE_DIRS-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Zlib_LIBRARY_DIRS
-Zlib_LIBRARY_DIRS-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Zlib_LIBRARY_NAMES
-Zlib_LIBRARY_NAMES-ADVANCED:INTERNAL=1
 Zoltan2_LIB_OPTIONAL_DEP_PACKAGES:INTERNAL=
 Zoltan2_LIB_REQUIRED_DEP_PACKAGES:INTERNAL=Tpetra;Epetra;Teuchos;Xpetra;Zoltan
 Zoltan2_TEST_OPTIONAL_DEP_PACKAGES:INTERNAL=
@@ -13532,10 +13475,6 @@ _PETSC_petsc_LIBRARY-ADVANCED:INTERNAL=1
 _SILO_silo.h_PATH-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: _SILO_siloh5_LIBRARY
 _SILO_siloh5_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: _Zlib_z_LIBRARY
-_Zlib_z_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: _Zlib_zlib.h_PATH
-_Zlib_zlib.h_PATH-ADVANCED:INTERNAL=1
 //Result of TRY_COMPILE
 _fcmngl:INTERNAL=TRUE
 ctf_unit_test_harness_INCLUDE_DIRS:INTERNAL=/localhome/8vt/PROJECTS/VERA.base/BUILDS/GCC-4.8.3/MOCK_MPI_DEBUG_GCC461_CI/BUILD;/home/8vt/localhome/PROJECTS/VERA.base/BUILDS/GCC-4.8.3/MOCK_MPI_DEBUG_GCC461_CI/VERA/SCALE/packages;/localhome/8vt/PROJECTS/VERA.base/BUILDS/GCC-4.8.3/MOCK_MPI_DEBUG_GCC461_CI/BUILD/SCALE/packages;/home/8vt/localhome/PROJECTS/VERA.base/BUILDS/GCC-4.8.3/MOCK_MPI_DEBUG_GCC461_CI/VERA/SCALE/Exnihilo/packages;/localhome/8vt/PROJECTS/VERA.base/BUILDS/GCC-4.8.3/MOCK_MPI_DEBUG_GCC461_CI/BUILD/SCALE/Exnihilo/packages;/localhome/8vt/PROJECTS/VERA.base/BUILDS/GCC-4.8.3/MOCK_MPI_DEBUG_GCC461_CI/BUILD/COBRA-TF/cobra_tf/utils

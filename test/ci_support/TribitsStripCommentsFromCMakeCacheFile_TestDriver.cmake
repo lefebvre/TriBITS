@@ -37,33 +37,35 @@
 # ************************************************************************
 # @HEADER
 
+cmake_minimum_required(VERSION 3.23.0 FATAL_ERROR)
+
 #
 # This file is run as a cmake -P script to create a CMakeCache.clean.txt file
 # given a CMakeCache.txt file.
 #
 
-MESSAGE("PROJECT_NAME = '${PROJECT_NAME}'")
-MESSAGE("TRIBITS_DIR = '${TRIBITS_DIR}'")
-MESSAGE("CMAKE_CACHE_FILE_IN = '${CMAKE_CACHE_FILE_IN}'")
-MESSAGE("CMAKE_CACHE_FILE_CLEAN_OUT = '${CMAKE_CACHE_FILE_CLEAN_OUT}'")
+message("PROJECT_NAME = '${PROJECT_NAME}'")
+message("TRIBITS_DIR = '${TRIBITS_DIR}'")
+message("CMAKE_CACHE_FILE_IN = '${CMAKE_CACHE_FILE_IN}'")
+message("CMAKE_CACHE_FILE_CLEAN_OUT = '${CMAKE_CACHE_FILE_CLEAN_OUT}'")
 
-SET(${PROJECT_NAME}_TRIBITS_DIR  ${TRIBITS_DIR})
+set(${PROJECT_NAME}_TRIBITS_DIR  ${TRIBITS_DIR})
 
 #
 # Set CMAKE_MODULE_PATH
 #
-SET( CMAKE_MODULE_PATH
+set( CMAKE_MODULE_PATH
   "${${PROJECT_NAME}_TRIBITS_DIR}/core/utils"
   "${${PROJECT_NAME}_TRIBITS_DIR}/ci_support"
   )
 
-INCLUDE(TribitsStripCommentsFromCMakeCacheFile)
+include(TribitsStripCommentsFromCMakeCacheFile)
 
-MESSAGE("Removed comments from '${CMAKE_CACHE_FILE_IN}' to create '${CMAKE_CACHE_FILE_CLEAN_OUT}' ...")
-TRIBITS_STRIP_COMMENTS_FROM_CMAKE_CACHE_FILE("${CMAKE_CACHE_FILE_IN}"
+message("Removed comments from '${CMAKE_CACHE_FILE_IN}' to create '${CMAKE_CACHE_FILE_CLEAN_OUT}' ...")
+tribits_strip_comments_from_cmake_cache_file("${CMAKE_CACHE_FILE_IN}"
   "${CMAKE_CACHE_FILE_CLEAN_OUT}")
 
-#CONFIGURE_FILE(
+#configure_file(
 #  "${CMAKE_CACHE_FILE_IN}"
 #  "${CMAKE_CACHE_FILE_CLEAN_OUT}"
 #  COPYONLY

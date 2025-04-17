@@ -1,42 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # @HEADER
-# ************************************************************************
-#
+# *****************************************************************************
 #            TriBITS: Tribal Build, Integrate, and Test System
-#                    Copyright 2013 Sandia Corporation
 #
-# Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-# the U.S. Government retains certain rights in this software.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-# 1. Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright
-# notice, this list of conditions and the following disclaimer in the
-# documentation and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the Corporation nor the names of the
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# ************************************************************************
+# Copyright 2013-2016 NTESS and the TriBITS contributors.
+# SPDX-License-Identifier: BSD-3-Clause
+# *****************************************************************************
 # @HEADER
 
 
@@ -46,7 +16,6 @@ import sys
 
 from FindGeneralScriptSupport import *
 from GeneralScriptSupport import *
-
 
 #
 # Default file locations
@@ -242,6 +211,22 @@ class TribitsDependencies:
     return len(self.__packagesList)
 
 
+  def getPackagesNamesList(self, onlyTopLevelPackages=True):
+    packagesNamesList = []
+    for packageDep in self.__packagesList:
+      #print ("packageDep.packageName = "+packageDep.packageName)
+      #print ("packageDep.parentPackage = "+packageDep.parentPackage)
+      if packageDep.parentPackage == "":
+        addPackage = True
+      elif not onlyTopLevelPackages:
+        addPackage = True
+      else:
+        addPackage = False
+      if addPackage:
+        packagesNamesList.append(packageDep.packageName)
+    return packagesNamesList
+
+
   def packageNameToID(self, packageName):
     return self.__packagesNameToID.get(packageName, -1)
 
@@ -262,6 +247,7 @@ class TribitsDependencies:
     return None
 
 
+  # Note: Path must contain ending "/"
   def getPackageNameFromPath(self, fullPath):
     for packageDep in self.__packagesList:
       regexFilePath = packageDep.packageDir+"/"
@@ -275,6 +261,7 @@ class TribitsDependencies:
     # packages because subpackages are listed before packages!
 
 
+  # Returns the paraent package name given a test name
   def getPackageNameFromTestName(self, testName):
     for packageDep in self.__packagesList:
       startTestName = packageDep.packageName+"_"
@@ -291,10 +278,15 @@ class TribitsDependencies:
 
 
   def filterPackageNameList(self, inputPackagesList, keepTypesList, verbose=False):
+    if len(inputPackagesList)==1 and inputPackagesList[0]=='':
+      return []
     i = 0
     outputPackagesList = []
     for packageName in inputPackagesList:
       #print("packageName = " + packageName)
+      if packageName == "ALL_PACKAGES":
+        outputPackagesList.append(packageName)
+        continue
       packageDep = self.getPackageByName(packageName)
       packageType = packageDep.packageType
       #print("packageType = " + packageType)
